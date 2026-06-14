@@ -1,0 +1,340 @@
+:host {
+  display: block;
+}
+
+.kinematics-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.panel {
+  padding: 1.25rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(143, 197, 255, 0.16);
+  background: rgba(8, 24, 39, 0.82);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.32);
+}
+
+.panel__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #58d8ff;
+}
+
+.panel__summary {
+  margin: 0.4rem 0 0;
+  color: #9bb7d4;
+  line-height: 1.6;
+}
+
+.kinematics-page__intro {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.kinematics-page__intro h2,
+.graphs__header h3 {
+  margin: 0;
+  font-size: clamp(1.6rem, 2vw, 2.2rem);
+}
+
+.controls-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.field--wide {
+  grid-column: span 2;
+}
+
+.field span,
+.metric-label {
+  color: #9bb7d4;
+  font-size: 0.9rem;
+}
+
+select,
+input,
+button {
+  font: inherit;
+}
+
+select,
+input[type="range"] {
+  width: 100%;
+}
+
+select {
+  min-height: 2.8rem;
+  padding: 0 0.85rem;
+  color: #e5f2ff;
+  background: rgba(5, 16, 28, 0.92);
+  border: 1px solid rgba(143, 197, 255, 0.16);
+  border-radius: 1rem;
+}
+
+button {
+  min-height: 2.8rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: #58d8ff;
+  color: #04111d;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+button:hover {
+  background: #7de1ff;
+}
+
+.button--ghost {
+  color: #f4f9ff;
+  background: rgba(12, 39, 62, 0.9);
+  border-color: rgba(143, 197, 255, 0.28);
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.kinematics-page__layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 2fr) minmax(18rem, 1fr);
+  align-items: start;
+}
+
+.viewport {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.viewport__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+}
+
+.viewport__status {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #e5f2ff;
+}
+
+.viewport__canvas {
+  display: block;
+  width: 100%;
+  min-height: 24rem;
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at center, rgba(88, 216, 255, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(5, 18, 30, 0.9), rgba(2, 10, 18, 0.98));
+  border: 1px solid rgba(143, 197, 255, 0.12);
+}
+
+.viewport__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.toggle-chip {
+  min-height: 2.4rem;
+  padding: 0 0.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 197, 255, 0.22);
+  background: rgba(5, 16, 28, 0.72);
+  color: #e5f2ff;
+}
+
+.toggle-chip:hover {
+  background: rgba(15, 41, 63, 0.92);
+}
+
+.viewport__message,
+.viewport__note {
+  margin: 0;
+  color: #9bb7d4;
+  line-height: 1.5;
+}
+
+.readouts {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.parameter-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.parameter-editor__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.parameter-editor__sections {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.parameter-section {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 1rem;
+  background: rgba(5, 16, 28, 0.48);
+  border: 1px solid rgba(143, 197, 255, 0.12);
+}
+
+.parameter-section h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.parameter-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.parameter-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.parameter-field span {
+  font-size: 0.88rem;
+  color: #9bb7d4;
+}
+
+.parameter-field input {
+  min-height: 2.7rem;
+  padding: 0 0.8rem;
+  color: #e5f2ff;
+  background: rgba(5, 16, 28, 0.92);
+  border: 1px solid rgba(143, 197, 255, 0.16);
+  border-radius: 0.9rem;
+}
+
+.equation {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #f7fbff;
+}
+
+.metrics-grid,
+.relative-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.metrics-grid strong,
+.relative-grid p {
+  display: block;
+  margin-top: 0.2rem;
+  line-height: 1.5;
+}
+
+.graphs {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.graphs__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: start;
+}
+
+.graphs__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.graph {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.graph--wide {
+  grid-column: span 2;
+}
+
+.graph figcaption {
+  font-size: 0.9rem;
+  color: #d7e8fb;
+}
+
+.graph svg {
+  width: 100%;
+  height: 7rem;
+  padding: 0.35rem;
+  border-radius: 1rem;
+  background: rgba(5, 16, 28, 0.8);
+  border: 1px solid rgba(143, 197, 255, 0.12);
+}
+
+.graph__line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.graph__line--x {
+  stroke: #58d8ff;
+}
+
+.graph__line--y {
+  stroke: #ff8a5b;
+}
+
+.graph__line--speed {
+  stroke: #a3ff8f;
+}
+
+@media (max-width: 980px) {
+  .kinematics-page__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .graphs__header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 720px) {
+  .controls-grid,
+  .graphs__grid,
+  .parameter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field--wide,
+  .graph--wide {
+    grid-column: auto;
+  }
+
+  .parameter-editor__header {
+    flex-direction: column;
+  }
+}

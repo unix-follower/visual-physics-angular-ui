@@ -1,0 +1,146 @@
+.fluid-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.fluid-page__hero {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(20, 60, 94, 0.95), rgba(9, 29, 51, 0.92));
+  color: #f3f8fc;
+}
+
+.fluid-page__eyebrow {
+  margin: 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9bc9e6;
+}
+
+.fluid-page__summary {
+  margin: 0;
+  max-width: 58rem;
+  line-height: 1.5;
+}
+
+.fluid-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1rem;
+}
+
+.fluid-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid rgba(93, 128, 158, 0.28);
+  border-radius: 1rem;
+  background: rgba(7, 21, 35, 0.88);
+  color: #e8f1f7;
+  box-shadow: 0 18px 34px rgba(3, 10, 17, 0.28);
+}
+
+.fluid-card h3,
+.fluid-card h4,
+.fluid-card p,
+.fluid-card pre {
+  margin: 0;
+}
+
+.fluid-card__note {
+  color: #b7d4e8;
+  line-height: 1.45;
+}
+
+.fluid-scenario,
+.fluid-insight {
+  display: grid;
+  gap: 0.4rem;
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(17, 37, 58, 0.75);
+}
+
+.fluid-scenario__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: baseline;
+}
+
+.fluid-fields,
+.fluid-insights,
+.fluid-actions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fluid-field {
+  display: grid;
+  gap: 0.4rem;
+  color: #d9e9f4;
+}
+
+.fluid-field input,
+.fluid-field select,
+.fluid-field textarea,
+.fluid-actions button,
+.fluid-upload {
+  border: 1px solid rgba(132, 171, 201, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(12, 27, 43, 0.85);
+  color: #eff8ff;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+}
+
+.fluid-actions button,
+.fluid-upload {
+  cursor: pointer;
+  text-align: left;
+}
+
+.fluid-upload {
+  display: inline-grid;
+  gap: 0.5rem;
+}
+
+.fluid-upload input {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.fluid-viewport {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.fluid-viewport__canvas {
+  width: 100%;
+  min-height: 18rem;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, rgba(8, 19, 33, 0.95), rgba(15, 41, 66, 0.88));
+  border: 1px solid rgba(108, 150, 183, 0.28);
+}
+
+pre {
+  overflow: auto;
+  max-height: 18rem;
+  padding: 0.85rem;
+  border-radius: 0.85rem;
+  background: rgba(4, 13, 21, 0.95);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+@media (max-width: 720px) {
+  .fluid-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,247 @@
+<section class="kinematics-page">
+  <div class="kinematics-page__intro panel">
+    <div>
+      <p class="panel__eyebrow">Kinematics workspace</p>
+      <h2>{{ selectedScenario().name }}</h2>
+      <p class="panel__summary">{{ selectedScenario().summary }}</p>
+    </div>
+
+    <div class="controls-grid">
+      <label class="field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of state.scenarios; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="field field--wide">
+        <span>Time {{ state.timeSeconds().toFixed(2) }} s</span>
+        <input
+          [max]="maxTimeSeconds()"
+          [value]="state.timeSeconds()"
+          min="0"
+          step="0.01"
+          type="range"
+          (input)="updateTime($event)"
+        />
+      </label>
+
+      <div class="controls-row" aria-label="Playback controls">
+        <button type="button" (click)="togglePlayback()">
+          {{ state.isPlaying() ? "Pause" : "Play" }}
+        </button>
+        <button type="button" (click)="stepForward()">Step +0.10s</button>
+        <button type="button" class="button--ghost" (click)="reset()">Reset</button>
+      </div>
+
+      <div class="controls-row" aria-label="Export controls">
+        <button type="button" class="button--ghost" (click)="downloadScenarioState()">
+          Export JSON
+        </button>
+        <button type="button" class="button--ghost" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" class="button--ghost" (click)="exportViewportImage()">
+          Export PNG
+        </button>
+      </div>
+
+      @if (exportMessage()) {
+        <p class="export-message">{{ exportMessage() }}</p>
+      }
+
+      <label class="field field--wide">
+        <span>Restore from exported JSON</span>
+        <textarea
+          [value]="importPayloadText()"
+          placeholder="Paste an exported scenario payload here"
+          rows="7"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+
+      <div class="controls-row" aria-label="Import controls">
+        <input
+          accept="application/json"
+          type="file"
+          (change)="importScenarioStateFromFile($event)"
+        />
+        <button type="button" class="button--ghost" (click)="importScenarioState()">
+          Import JSON
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="kinematics-page__layout">
+    <section class="panel viewport" aria-label="Kinematics viewport">
+      <div class="viewport__meta">
+        <p class="panel__eyebrow">WebGPU viewport</p>
+        <p class="viewport__status">{{ webGpuReady() ? "Ready" : "Pending" }}</p>
+      </div>
+
+      <canvas #viewport class="viewport__canvas" aria-label="WebGPU kinematics viewport"></canvas>
+
+      <div class="viewport__toggles" aria-label="Vector overlays">
+        <button type="button" class="toggle-chip" (click)="toggleOverlay('showPositionVector')">
+          Position {{ overlays().showPositionVector ? "on" : "off" }}
+        </button>
+        <button type="button" class="toggle-chip" (click)="toggleOverlay('showVelocityVector')">
+          Velocity {{ overlays().showVelocityVector ? "on" : "off" }}
+        </button>
+        <button type="button" class="toggle-chip" (click)="toggleOverlay('showAccelerationVector')">
+          Acceleration {{ overlays().showAccelerationVector ? "on" : "off" }}
+        </button>
+      </div>
+
+      <div class="viewport__legend" aria-label="Viewport legend">
+        @for (item of vectorLegendItems(); track item.label) {
+          <div class="legend-item" [class.legend-item--inactive]="!item.active">
+            <span class="legend-swatch" [class]="'legend-swatch ' + item.colorClass"></span>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+        <p class="viewport__bounds">Viewport bounds: {{ viewportBoundsLabel() }}</p>
+      </div>
+
+      <p class="viewport__message">{{ webGpuMessage() }}</p>
+      <p class="viewport__note">
+        The viewport now renders axes, the sampled path, the current body marker, and toggleable
+        position, velocity, and acceleration vectors.
+      </p>
+    </section>
+
+    <aside class="panel readouts" aria-label="Scenario readouts">
+      <section>
+        <p class="panel__eyebrow">Equation</p>
+        <p class="equation">{{ selectedScenario().equationSummary }}</p>
+      </section>
+
+      <section class="parameter-editor">
+        <div class="parameter-editor__header">
+          <div>
+            <p class="panel__eyebrow">Editable parameters</p>
+            <p class="panel__summary">
+              Tune the active scenario and reuse the same evaluator, graphs, and viewport.
+            </p>
+          </div>
+
+          <button type="button" class="button--ghost" (click)="resetScenarioParameters()">
+            Reset parameters
+          </button>
+        </div>
+
+        <div class="parameter-editor__sections">
+          @for (section of parameterSections(); track section.heading) {
+            <section class="parameter-section">
+              <h3>{{ section.heading }}</h3>
+
+              <div class="parameter-grid">
+                @for (field of section.fields; track field.field) {
+                  <label class="parameter-field">
+                    <span>{{ field.label }}</span>
+                    <input
+                      [step]="field.step"
+                      [value]="field.value"
+                      type="number"
+                      (input)="updateScenarioParameter(field.field, $event)"
+                    />
+                  </label>
+                }
+              </div>
+            </section>
+          }
+        </div>
+      </section>
+
+      <section class="metrics-grid">
+        <div>
+          <span class="metric-label">Position</span>
+          <strong>
+            ({{ currentState().position.x.toFixed(2) }}, {{ currentState().position.y.toFixed(2) }})
+            m
+          </strong>
+        </div>
+        <div>
+          <span class="metric-label">Velocity</span>
+          <strong>
+            ({{ currentState().velocity.x.toFixed(2) }}, {{ currentState().velocity.y.toFixed(2) }})
+            m/s
+          </strong>
+        </div>
+        <div>
+          <span class="metric-label">Acceleration</span>
+          <strong>
+            ({{ currentState().acceleration.x.toFixed(2) }},
+            {{ currentState().acceleration.y.toFixed(2) }}) m/s²
+          </strong>
+        </div>
+        <div>
+          <span class="metric-label">Speed</span>
+          <strong>{{ currentState().speed.toFixed(2) }} m/s</strong>
+        </div>
+      </section>
+
+      <section class="insights-grid" aria-label="Interpretation cues">
+        @for (card of insightCards(); track card.label) {
+          <article class="insight-card">
+            <span class="metric-label">{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </article>
+        }
+      </section>
+
+      @if (currentState().relativePosition; as relativePosition) {
+        <section class="relative-grid">
+          <p class="panel__eyebrow">Moving observer frame</p>
+          <p>
+            Relative position: ({{ relativePosition.x.toFixed(2) }},
+            {{ relativePosition.y.toFixed(2) }}) m
+          </p>
+          @if (currentState().relativeVelocity; as relativeVelocity) {
+            <p>
+              Relative velocity: ({{ relativeVelocity.x.toFixed(2) }},
+              {{ relativeVelocity.y.toFixed(2) }}) m/s
+            </p>
+          }
+        </section>
+      }
+    </aside>
+  </div>
+
+  <section class="graphs panel" aria-label="Kinematics graphs">
+    <div class="graphs__header">
+      <div>
+        <p class="panel__eyebrow">Sampled trajectories</p>
+        <h3>Time-series previews</h3>
+      </div>
+      <p class="panel__summary">
+        These samples come from the same scenario evaluator that Phase 2 Vulkan will reuse.
+      </p>
+    </div>
+
+    <div class="graphs__grid">
+      <figure class="graph">
+        <figcaption>x position vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path [attr.d]="xPositionPath()" class="graph__line graph__line--x"></path>
+        </svg>
+      </figure>
+
+      <figure class="graph">
+        <figcaption>y position vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path [attr.d]="yPositionPath()" class="graph__line graph__line--y"></path>
+        </svg>
+      </figure>
+
+      <figure class="graph graph--wide">
+        <figcaption>speed vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path [attr.d]="speedPath()" class="graph__line graph__line--speed"></path>
+        </svg>
+      </figure>
+    </div>
+  </section>
+</section>

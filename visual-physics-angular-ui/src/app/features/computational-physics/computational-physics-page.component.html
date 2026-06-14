@@ -1,0 +1,960 @@
+<section class="computational-physics-page">
+  <div class="computational-physics-page__hero">
+    <p class="computational-physics-page__eyebrow">Phase 9</p>
+    <h2>Computational / Numerical Physics with Angular and WebGPU</h2>
+    <p class="computational-physics-page__summary">
+      Phase 9 now compares Euler, symplectic, and RK4 against high-resolution reference trajectories
+      across projectile, orbital, and spring-mass motion so timestep error, phase drift, and
+      stability trade-offs stay visible and exportable.
+    </p>
+  </div>
+
+  <div class="computational-physics-page__grid">
+    <article class="computational-physics-card computational-physics-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        The current Phase 9 slice now has a dedicated Angular route, multi-scenario
+        solver-comparison state service, report export helpers, WebGPU viewport, and focused tests.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. Active solver {{ selectedSolverMethod().toUpperCase() }}, final position error
+        {{ activeMetrics().finalPositionError.toFixed(3) }}.
+      </p>
+      <p>
+        Completion status:
+        <strong>Phase 9 multi-scenario solver-comparison slice in progress</strong>.
+      </p>
+      <label class="computational-physics-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--scenario">
+      <h3>Phase 9 Scenario Set</h3>
+      @for (scenario of scenarioPreviews; track scenario.id) {
+        <section class="computational-physics-scenario">
+          <div class="computational-physics-scenario__header">
+            <h4>{{ scenario.name }}</h4>
+            <span>{{ scenario.status }}</span>
+          </div>
+          <p>{{ scenario.summary }}</p>
+          <p>{{ scenario.focusArea }}</p>
+          <p>{{ scenario.equationSummary }}</p>
+        </section>
+      }
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--viewport">
+      <h3>Viewport</h3>
+      <div class="computational-physics-viewport-shell">
+        <canvas
+          #viewport
+          class="computational-physics-viewport-canvas"
+          width="640"
+          height="360"
+        ></canvas>
+        <p>{{ viewportHint() }}</p>
+      </div>
+      <div class="computational-physics-actions computational-physics-actions--overlay">
+        <button type="button" (click)="toggleOverlay('showReferenceTrajectory')">
+          Reference {{ overlays().showReferenceTrajectory ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showEulerTrajectory')">
+          Euler {{ overlays().showEulerTrajectory ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showSymplecticTrajectory')">
+          Symplectic {{ overlays().showSymplecticTrajectory ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showRk4Trajectory')">
+          RK4 {{ overlays().showRk4Trajectory ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showErrorBars')">
+          Error bars {{ overlays().showErrorBars ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--controls">
+      <h3>
+        {{
+          projectileActive()
+            ? "Projectile Controls"
+            : orbitalActive()
+              ? "Orbital Controls"
+              : "Spring Controls"
+        }}
+      </h3>
+      <div class="computational-physics-fields">
+        <label class="computational-physics-field">
+          <span>Mass (kg)</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().mass"
+            (input)="updateScenarioParameter('mass', $event)"
+          />
+        </label>
+        <label class="computational-physics-field">
+          <span>Velocity x</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().initialVelocity.x"
+            (input)="updateScenarioParameter('initialVelocity.x', $event)"
+          />
+        </label>
+        <label class="computational-physics-field">
+          <span>Velocity y</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().initialVelocity.y"
+            (input)="updateScenarioParameter('initialVelocity.y', $event)"
+          />
+        </label>
+        @if (projectileActive()) {
+          <label class="computational-physics-field">
+            <span>Gravity y</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().gravity?.y ?? 0"
+              (input)="updateScenarioParameter('gravity.y', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Drag coefficient</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="selectedScenario().dragCoefficient ?? 0"
+              (input)="updateScenarioParameter('dragCoefficient', $event)"
+            />
+          </label>
+        } @else if (orbitalActive()) {
+          <label class="computational-physics-field">
+            <span>Orbital center x</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().orbitalCenter?.x ?? 0"
+              (input)="updateScenarioParameter('orbitalCenter.x', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Orbital center y</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().orbitalCenter?.y ?? 0"
+              (input)="updateScenarioParameter('orbitalCenter.y', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Gravitational parameter</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().gravitationalParameter ?? 0"
+              (input)="updateScenarioParameter('gravitationalParameter', $event)"
+            />
+          </label>
+        } @else {
+          <label class="computational-physics-field">
+            <span>Spring anchor x</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().springAnchor?.x ?? 0"
+              (input)="updateScenarioParameter('springAnchor.x', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Spring anchor y</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().springAnchor?.y ?? 0"
+              (input)="updateScenarioParameter('springAnchor.y', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Spring constant</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="selectedScenario().springConstant ?? 0"
+              (input)="updateScenarioParameter('springConstant', $event)"
+            />
+          </label>
+          <label class="computational-physics-field">
+            <span>Damping coefficient</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="selectedScenario().dampingCoefficient ?? 0"
+              (input)="updateScenarioParameter('dampingCoefficient', $event)"
+            />
+          </label>
+        }
+        <label class="computational-physics-field">
+          <span>Comparison timestep</span>
+          <input
+            type="number"
+            step="0.01"
+            [value]="selectedScenario().comparisonStepSeconds"
+            (input)="updateScenarioParameter('comparisonStepSeconds', $event)"
+          />
+        </label>
+      </div>
+
+      <label class="computational-physics-field computational-physics-field--range">
+        <span>Time (s)</span>
+        <input
+          type="range"
+          min="0"
+          [max]="selectedScenario().durationSeconds"
+          step="0.05"
+          [value]="currentTimeSeconds()"
+          (input)="updateTimeSeconds($event)"
+        />
+        <strong>{{ currentTimeSeconds().toFixed(2) }} s</strong>
+      </label>
+
+      <div class="computational-physics-actions computational-physics-actions--solver">
+        <button
+          type="button"
+          [class.computational-physics-actions__button--active]="selectedSolverMethod() === 'euler'"
+          (click)="selectSolverMethod('euler')"
+        >
+          Focus Euler
+        </button>
+        <button
+          type="button"
+          [class.computational-physics-actions__button--active]="
+            selectedSolverMethod() === 'symplectic'
+          "
+          (click)="selectSolverMethod('symplectic')"
+        >
+          Focus Symplectic
+        </button>
+        <button
+          type="button"
+          [class.computational-physics-actions__button--active]="selectedSolverMethod() === 'rk4'"
+          (click)="selectSolverMethod('rk4')"
+        >
+          Focus RK4
+        </button>
+      </div>
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--results">
+      <h3>Solver Readouts</h3>
+      <div class="computational-physics-results">
+        <p>
+          Reference speed: <strong>{{ currentState().referenceSpeed.toFixed(3) }}</strong>
+        </p>
+        <p>
+          Euler position error: <strong>{{ currentState().eulerPositionError.toFixed(3) }}</strong>
+        </p>
+        <p>
+          Symplectic position error:
+          <strong>{{ currentState().symplecticPositionError.toFixed(3) }}</strong>
+        </p>
+        <p>
+          RK4 position error: <strong>{{ currentState().rk4PositionError.toFixed(3) }}</strong>
+        </p>
+        <p>
+          Euler speed error: <strong>{{ currentState().eulerSpeedError.toFixed(3) }}</strong>
+        </p>
+        <p>
+          Symplectic speed error:
+          <strong>{{ currentState().symplecticSpeedError.toFixed(3) }}</strong>
+        </p>
+        <p>
+          RK4 speed error: <strong>{{ currentState().rk4SpeedError.toFixed(3) }}</strong>
+        </p>
+        @if (orbitalActive() && currentState().orbitalDiagnostics; as orbitalDiagnostics) {
+          <p>
+            Euler energy error:
+            <strong>{{ orbitalDiagnostics.eulerSpecificEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Symplectic energy error:
+            <strong>{{ orbitalDiagnostics.symplecticSpecificEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            RK4 energy error:
+            <strong>{{ orbitalDiagnostics.rk4SpecificEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Euler angular momentum error:
+            <strong>{{ orbitalDiagnostics.eulerAngularMomentumError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Symplectic angular momentum error:
+            <strong>{{ orbitalDiagnostics.symplecticAngularMomentumError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            RK4 angular momentum error:
+            <strong>{{ orbitalDiagnostics.rk4AngularMomentumError.toFixed(4) }}</strong>
+          </p>
+        } @else if (springActive() && currentState().springDiagnostics; as springDiagnostics) {
+          <p>
+            Euler spring energy error:
+            <strong>{{ springDiagnostics.eulerTotalEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Symplectic spring energy error:
+            <strong>{{ springDiagnostics.symplecticTotalEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            RK4 spring energy error:
+            <strong>{{ springDiagnostics.rk4TotalEnergyError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Euler amplitude error:
+            <strong>{{ springDiagnostics.eulerDisplacementMagnitudeError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Symplectic amplitude error:
+            <strong>{{ springDiagnostics.symplecticDisplacementMagnitudeError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            RK4 amplitude error:
+            <strong>{{ springDiagnostics.rk4DisplacementMagnitudeError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Euler phase error:
+            <strong>{{ springDiagnostics.eulerPhaseAngleError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            Symplectic phase error:
+            <strong>{{ springDiagnostics.symplecticPhaseAngleError.toFixed(4) }}</strong>
+          </p>
+          <p>
+            RK4 phase error: <strong>{{ springDiagnostics.rk4PhaseAngleError.toFixed(4) }}</strong>
+          </p>
+        }
+      </div>
+      <p class="computational-physics-results__note">
+        Lower error indicates closer agreement with the high-resolution reference solution.
+      </p>
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--insights">
+      <h3>Insight Cards</h3>
+      <div class="computational-physics-insights">
+        @for (card of insightCards(); track card.title) {
+          <section class="computational-physics-insight">
+            <h4>{{ card.title }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.context }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="computational-physics-card computational-physics-card--convergence">
+      <h3>Timestep Convergence</h3>
+      <p>
+        Each row reruns the full scenario at a smaller comparison timestep so error trends remain
+        visible beyond the currently selected $\Delta t$.
+      </p>
+      <div class="computational-physics-plot-shell">
+        <svg
+          class="computational-physics-plot"
+          viewBox="0 0 360 160"
+          aria-label="Timestep convergence plot"
+        >
+          <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+          <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+          @for (guideLine of convergencePlot().guideLines; track guideLine.label) {
+            <path
+              [attr.d]="guideLine.path"
+              [attr.stroke]="guideLine.color"
+              class="computational-physics-plot__path computational-physics-plot__path--guide"
+              transform="translate(28 12)"
+            />
+            <text
+              [attr.x]="guideLine.labelX + 28"
+              [attr.y]="guideLine.labelY + 20"
+              class="computational-physics-plot__label"
+            >
+              {{ guideLine.label }}
+            </text>
+          }
+          @for (series of convergencePlot().series; track series.label) {
+            <path
+              [attr.d]="series.path"
+              [attr.stroke]="series.color"
+              class="computational-physics-plot__path"
+              transform="translate(28 12)"
+            />
+          }
+          <text x="28" y="148" class="computational-physics-plot__label">
+            {{ convergencePlot().xStartLabel }}
+          </text>
+          <text x="270" y="148" class="computational-physics-plot__label">
+            {{ convergencePlot().xEndLabel }}
+          </text>
+          <text x="6" y="16" class="computational-physics-plot__label">
+            {{ convergencePlot().yMaxLabel }}
+          </text>
+          <text x="6" y="132" class="computational-physics-plot__label">
+            {{ convergencePlot().yMinLabel }}
+          </text>
+        </svg>
+        <div class="computational-physics-plot-legend">
+          @for (series of convergencePlot().series; track series.label) {
+            <p>
+              <span
+                class="computational-physics-plot-legend__swatch"
+                [style.background]="series.color"
+              ></span>
+              {{ series.label }}
+            </p>
+          }
+        </div>
+        @if (orbitalActive()) {
+          <div class="computational-physics-plots">
+            <section class="computational-physics-plot-shell">
+              <h4>Orbital Energy Convergence</h4>
+              <svg
+                class="computational-physics-plot"
+                viewBox="0 0 360 160"
+                aria-label="Orbital energy convergence plot"
+              >
+                <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+                <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+                @for (
+                  guideLine of orbitalEnergyConvergencePlot().guideLines;
+                  track guideLine.label
+                ) {
+                  <path
+                    [attr.d]="guideLine.path"
+                    [attr.stroke]="guideLine.color"
+                    class="computational-physics-plot__path computational-physics-plot__path--guide"
+                    transform="translate(28 12)"
+                  />
+                  <text
+                    [attr.x]="guideLine.labelX + 28"
+                    [attr.y]="guideLine.labelY + 20"
+                    class="computational-physics-plot__label"
+                  >
+                    {{ guideLine.label }}
+                  </text>
+                }
+                @for (series of orbitalEnergyConvergencePlot().series; track series.label) {
+                  <path
+                    [attr.d]="series.path"
+                    [attr.stroke]="series.color"
+                    class="computational-physics-plot__path"
+                    transform="translate(28 12)"
+                  />
+                }
+                <text x="28" y="148" class="computational-physics-plot__label">
+                  {{ orbitalEnergyConvergencePlot().xStartLabel }}
+                </text>
+                <text x="270" y="148" class="computational-physics-plot__label">
+                  {{ orbitalEnergyConvergencePlot().xEndLabel }}
+                </text>
+                <text x="6" y="16" class="computational-physics-plot__label">
+                  {{ orbitalEnergyConvergencePlot().yMaxLabel }}
+                </text>
+                <text x="6" y="132" class="computational-physics-plot__label">
+                  {{ orbitalEnergyConvergencePlot().yMinLabel }}
+                </text>
+              </svg>
+            </section>
+            <section class="computational-physics-plot-shell">
+              <h4>Orbital Angular Momentum Convergence</h4>
+              <svg
+                class="computational-physics-plot"
+                viewBox="0 0 360 160"
+                aria-label="Orbital angular momentum convergence plot"
+              >
+                <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+                <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+                @for (
+                  guideLine of orbitalMomentumConvergencePlot().guideLines;
+                  track guideLine.label
+                ) {
+                  <path
+                    [attr.d]="guideLine.path"
+                    [attr.stroke]="guideLine.color"
+                    class="computational-physics-plot__path computational-physics-plot__path--guide"
+                    transform="translate(28 12)"
+                  />
+                  <text
+                    [attr.x]="guideLine.labelX + 28"
+                    [attr.y]="guideLine.labelY + 20"
+                    class="computational-physics-plot__label"
+                  >
+                    {{ guideLine.label }}
+                  </text>
+                }
+                @for (series of orbitalMomentumConvergencePlot().series; track series.label) {
+                  <path
+                    [attr.d]="series.path"
+                    [attr.stroke]="series.color"
+                    class="computational-physics-plot__path"
+                    transform="translate(28 12)"
+                  />
+                }
+                <text x="28" y="148" class="computational-physics-plot__label">
+                  {{ orbitalMomentumConvergencePlot().xStartLabel }}
+                </text>
+                <text x="270" y="148" class="computational-physics-plot__label">
+                  {{ orbitalMomentumConvergencePlot().xEndLabel }}
+                </text>
+                <text x="6" y="16" class="computational-physics-plot__label">
+                  {{ orbitalMomentumConvergencePlot().yMaxLabel }}
+                </text>
+                <text x="6" y="132" class="computational-physics-plot__label">
+                  {{ orbitalMomentumConvergencePlot().yMinLabel }}
+                </text>
+              </svg>
+            </section>
+          </div>
+        } @else if (springActive()) {
+          <div class="computational-physics-plots">
+            <section class="computational-physics-plot-shell">
+              <h4>Spring Energy Convergence</h4>
+              <svg
+                class="computational-physics-plot"
+                viewBox="0 0 360 160"
+                aria-label="Spring energy convergence plot"
+              >
+                <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+                <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+                @for (
+                  guideLine of springEnergyConvergencePlot().guideLines;
+                  track guideLine.label
+                ) {
+                  <path
+                    [attr.d]="guideLine.path"
+                    [attr.stroke]="guideLine.color"
+                    class="computational-physics-plot__path computational-physics-plot__path--guide"
+                    transform="translate(28 12)"
+                  />
+                  <text
+                    [attr.x]="guideLine.labelX + 28"
+                    [attr.y]="guideLine.labelY + 20"
+                    class="computational-physics-plot__label"
+                  >
+                    {{ guideLine.label }}
+                  </text>
+                }
+                @for (series of springEnergyConvergencePlot().series; track series.label) {
+                  <path
+                    [attr.d]="series.path"
+                    [attr.stroke]="series.color"
+                    class="computational-physics-plot__path"
+                    transform="translate(28 12)"
+                  />
+                }
+                <text x="28" y="148" class="computational-physics-plot__label">
+                  {{ springEnergyConvergencePlot().xStartLabel }}
+                </text>
+                <text x="270" y="148" class="computational-physics-plot__label">
+                  {{ springEnergyConvergencePlot().xEndLabel }}
+                </text>
+                <text x="6" y="16" class="computational-physics-plot__label">
+                  {{ springEnergyConvergencePlot().yMaxLabel }}
+                </text>
+                <text x="6" y="132" class="computational-physics-plot__label">
+                  {{ springEnergyConvergencePlot().yMinLabel }}
+                </text>
+              </svg>
+            </section>
+            <section class="computational-physics-plot-shell">
+              <h4>Spring Phase Convergence</h4>
+              <svg
+                class="computational-physics-plot"
+                viewBox="0 0 360 160"
+                aria-label="Spring phase convergence plot"
+              >
+                <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+                <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+                @for (guideLine of springPhaseConvergencePlot().guideLines; track guideLine.label) {
+                  <path
+                    [attr.d]="guideLine.path"
+                    [attr.stroke]="guideLine.color"
+                    class="computational-physics-plot__path computational-physics-plot__path--guide"
+                    transform="translate(28 12)"
+                  />
+                  <text
+                    [attr.x]="guideLine.labelX + 28"
+                    [attr.y]="guideLine.labelY + 20"
+                    class="computational-physics-plot__label"
+                  >
+                    {{ guideLine.label }}
+                  </text>
+                }
+                @for (series of springPhaseConvergencePlot().series; track series.label) {
+                  <path
+                    [attr.d]="series.path"
+                    [attr.stroke]="series.color"
+                    class="computational-physics-plot__path"
+                    transform="translate(28 12)"
+                  />
+                }
+                <text x="28" y="148" class="computational-physics-plot__label">
+                  {{ springPhaseConvergencePlot().xStartLabel }}
+                </text>
+                <text x="270" y="148" class="computational-physics-plot__label">
+                  {{ springPhaseConvergencePlot().xEndLabel }}
+                </text>
+                <text x="6" y="16" class="computational-physics-plot__label">
+                  {{ springPhaseConvergencePlot().yMaxLabel }}
+                </text>
+                <text x="6" y="132" class="computational-physics-plot__label">
+                  {{ springPhaseConvergencePlot().yMinLabel }}
+                </text>
+              </svg>
+            </section>
+          </div>
+        }
+        <div class="computational-physics-results">
+          @if (solverRecommendation(); as recommendation) {
+            <p>
+              Best stability recommendation: {{ recommendation.solverMethod.toUpperCase() }} at Δt
+              {{ recommendation.recommendedStepSeconds.toFixed(3) }}.
+              {{ recommendation.reason }}
+            </p>
+          }
+          @for (candidate of solverRecommendationCandidates(); track candidate.solverMethod) {
+            <p>
+              Stability rank {{ $index + 1 }}: {{ candidate.solverMethod.toUpperCase() }}
+              @if (candidate.eligible) {
+                up to Δt {{ candidate.recommendedStepSeconds?.toFixed(3) ?? "n/a" }}; limited by
+                {{ candidate.limitingMetric }}.
+              } @else {
+                not recommended in sampled range; blocked by {{ candidate.limitingMetric }}.
+              }
+            </p>
+          }
+          @for (estimate of observedOrders(); track estimate.fineStepSeconds) {
+            <p>
+              Order from Δt {{ estimate.coarseStepSeconds.toFixed(3) }} to
+              {{ estimate.fineStepSeconds.toFixed(3) }}: Euler
+              {{ estimate.eulerOrder?.toFixed(2) ?? "n/a" }}, Symplectic
+              {{ estimate.symplecticOrder?.toFixed(2) ?? "n/a" }}, RK4
+              {{ estimate.rk4Order?.toFixed(2) ?? "n/a" }}
+            </p>
+          }
+          @if (orbitalActive()) {
+            @for (
+              estimate of orbitalEnergyObservedOrders();
+              track "orbital-energy-" + estimate.fineStepSeconds
+            ) {
+              <p>
+                Orbital energy order from Δt {{ estimate.coarseStepSeconds.toFixed(3) }} to
+                {{ estimate.fineStepSeconds.toFixed(3) }}: Euler
+                {{ estimate.eulerOrder?.toFixed(2) ?? "n/a" }}, Symplectic
+                {{ estimate.symplecticOrder?.toFixed(2) ?? "n/a" }}, RK4
+                {{ estimate.rk4Order?.toFixed(2) ?? "n/a" }}
+              </p>
+            }
+            @for (
+              estimate of orbitalMomentumObservedOrders();
+              track "orbital-momentum-" + estimate.fineStepSeconds
+            ) {
+              <p>
+                Orbital angular momentum order from Δt
+                {{ estimate.coarseStepSeconds.toFixed(3) }} to
+                {{ estimate.fineStepSeconds.toFixed(3) }}: Euler
+                {{ estimate.eulerOrder?.toFixed(2) ?? "n/a" }}, Symplectic
+                {{ estimate.symplecticOrder?.toFixed(2) ?? "n/a" }}, RK4
+                {{ estimate.rk4Order?.toFixed(2) ?? "n/a" }}
+              </p>
+            }
+          } @else if (springActive()) {
+            @for (
+              estimate of springEnergyObservedOrders();
+              track "spring-energy-" + estimate.fineStepSeconds
+            ) {
+              <p>
+                Spring energy order from Δt {{ estimate.coarseStepSeconds.toFixed(3) }} to
+                {{ estimate.fineStepSeconds.toFixed(3) }}: Euler
+                {{ estimate.eulerOrder?.toFixed(2) ?? "n/a" }}, Symplectic
+                {{ estimate.symplecticOrder?.toFixed(2) ?? "n/a" }}, RK4
+                {{ estimate.rk4Order?.toFixed(2) ?? "n/a" }}
+              </p>
+            }
+            @for (
+              estimate of springPhaseObservedOrders();
+              track "spring-phase-" + estimate.fineStepSeconds
+            ) {
+              <p>
+                Spring phase order from Δt {{ estimate.coarseStepSeconds.toFixed(3) }} to
+                {{ estimate.fineStepSeconds.toFixed(3) }}: Euler
+                {{ estimate.eulerOrder?.toFixed(2) ?? "n/a" }}, Symplectic
+                {{ estimate.symplecticOrder?.toFixed(2) ?? "n/a" }}, RK4
+                {{ estimate.rk4Order?.toFixed(2) ?? "n/a" }}
+              </p>
+            }
+          }
+          @for (threshold of stabilityThresholds(); track threshold.solverMethod) {
+            <p>
+              {{ threshold.solverMethod.toUpperCase() }} recommended Δt for tolerance
+              {{ threshold.tolerance.toFixed(3) }}:
+              {{ threshold.recommendedStepSeconds?.toFixed(3) ?? "none in sampled range" }}
+            </p>
+          }
+          @for (
+            threshold of orbitalDriftThresholds();
+            track threshold.metric + "-" + threshold.solverMethod
+          ) {
+            <p>
+              {{ threshold.solverMethod.toUpperCase() }} recommended orbital
+              {{ threshold.metric }} Δt for tolerance {{ threshold.tolerance.toFixed(3) }}:
+              {{ threshold.recommendedStepSeconds?.toFixed(3) ?? "none in sampled range" }}
+            </p>
+          }
+          @for (
+            threshold of springDriftThresholds();
+            track threshold.metric + "-" + threshold.solverMethod
+          ) {
+            <p>
+              {{ threshold.solverMethod.toUpperCase() }} recommended spring
+              {{ threshold.metric }} Δt for tolerance {{ threshold.tolerance.toFixed(3) }}:
+              {{ threshold.recommendedStepSeconds?.toFixed(3) ?? "none in sampled range" }}
+            </p>
+          }
+        </div>
+        <button type="button" (click)="downloadConvergenceReport()">
+          Download Convergence CSV
+        </button>
+      </div>
+    </article>
+
+    @if (orbitalActive()) {
+      <article class="computational-physics-card computational-physics-card--convergence">
+        <h3>Invariant Drift History</h3>
+        <p>
+          These samples track conserved-quantity drift over the full orbit so the difference between
+          short-term accuracy and long-term stability stays visible.
+        </p>
+        <div class="computational-physics-plots">
+          <section class="computational-physics-plot-shell">
+            <h4>Energy Drift Plot</h4>
+            <svg
+              class="computational-physics-plot"
+              viewBox="0 0 360 160"
+              aria-label="Orbital energy drift plot"
+            >
+              <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+              <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+              @for (series of orbitalEnergyPlot().series; track series.label) {
+                <path
+                  [attr.d]="series.path"
+                  [attr.stroke]="series.color"
+                  class="computational-physics-plot__path"
+                  transform="translate(28 12)"
+                />
+              }
+              <text x="28" y="148" class="computational-physics-plot__label">
+                {{ orbitalEnergyPlot().xStartLabel }}
+              </text>
+              <text x="270" y="148" class="computational-physics-plot__label">
+                {{ orbitalEnergyPlot().xEndLabel }}
+              </text>
+              <text x="6" y="16" class="computational-physics-plot__label">
+                {{ orbitalEnergyPlot().yMaxLabel }}
+              </text>
+              <text x="6" y="132" class="computational-physics-plot__label">
+                {{ orbitalEnergyPlot().yMinLabel }}
+              </text>
+            </svg>
+          </section>
+          <section class="computational-physics-plot-shell">
+            <h4>Angular Momentum Drift Plot</h4>
+            <svg
+              class="computational-physics-plot"
+              viewBox="0 0 360 160"
+              aria-label="Orbital angular momentum drift plot"
+            >
+              <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+              <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+              @for (series of orbitalMomentumPlot().series; track series.label) {
+                <path
+                  [attr.d]="series.path"
+                  [attr.stroke]="series.color"
+                  class="computational-physics-plot__path"
+                  transform="translate(28 12)"
+                />
+              }
+              <text x="28" y="148" class="computational-physics-plot__label">
+                {{ orbitalMomentumPlot().xStartLabel }}
+              </text>
+              <text x="270" y="148" class="computational-physics-plot__label">
+                {{ orbitalMomentumPlot().xEndLabel }}
+              </text>
+              <text x="6" y="16" class="computational-physics-plot__label">
+                {{ orbitalMomentumPlot().yMaxLabel }}
+              </text>
+              <text x="6" y="132" class="computational-physics-plot__label">
+                {{ orbitalMomentumPlot().yMinLabel }}
+              </text>
+            </svg>
+          </section>
+          <div class="computational-physics-plot-legend">
+            @for (series of orbitalEnergyPlot().series; track series.label) {
+              <p>
+                <span
+                  class="computational-physics-plot-legend__swatch"
+                  [style.background]="series.color"
+                ></span>
+                {{ series.label }}
+              </p>
+            }
+          </div>
+          <button type="button" (click)="downloadInvariantReport()">Download Invariant CSV</button>
+        </div>
+      </article>
+    } @else if (springActive()) {
+      <article class="computational-physics-card computational-physics-card--convergence">
+        <h3>Oscillator Drift History</h3>
+        <p>
+          These samples track total-energy and amplitude drift over repeated oscillations so
+          numerical damping and phase stability remain visible across the full run.
+        </p>
+        <div class="computational-physics-plots">
+          <section class="computational-physics-plot-shell">
+            <h4>Spring Energy Drift Plot</h4>
+            <svg
+              class="computational-physics-plot"
+              viewBox="0 0 360 160"
+              aria-label="Spring energy drift plot"
+            >
+              <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+              <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+              @for (series of springEnergyPlot().series; track series.label) {
+                <path
+                  [attr.d]="series.path"
+                  [attr.stroke]="series.color"
+                  class="computational-physics-plot__path"
+                  transform="translate(28 12)"
+                />
+              }
+              <text x="28" y="148" class="computational-physics-plot__label">
+                {{ springEnergyPlot().xStartLabel }}
+              </text>
+              <text x="270" y="148" class="computational-physics-plot__label">
+                {{ springEnergyPlot().xEndLabel }}
+              </text>
+              <text x="6" y="16" class="computational-physics-plot__label">
+                {{ springEnergyPlot().yMaxLabel }}
+              </text>
+              <text x="6" y="132" class="computational-physics-plot__label">
+                {{ springEnergyPlot().yMinLabel }}
+              </text>
+            </svg>
+          </section>
+          <section class="computational-physics-plot-shell">
+            <h4>Amplitude Drift Plot</h4>
+            <svg
+              class="computational-physics-plot"
+              viewBox="0 0 360 160"
+              aria-label="Spring amplitude drift plot"
+            >
+              <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+              <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+              @for (series of springAmplitudePlot().series; track series.label) {
+                <path
+                  [attr.d]="series.path"
+                  [attr.stroke]="series.color"
+                  class="computational-physics-plot__path"
+                  transform="translate(28 12)"
+                />
+              }
+              <text x="28" y="148" class="computational-physics-plot__label">
+                {{ springAmplitudePlot().xStartLabel }}
+              </text>
+              <text x="270" y="148" class="computational-physics-plot__label">
+                {{ springAmplitudePlot().xEndLabel }}
+              </text>
+              <text x="6" y="16" class="computational-physics-plot__label">
+                {{ springAmplitudePlot().yMaxLabel }}
+              </text>
+              <text x="6" y="132" class="computational-physics-plot__label">
+                {{ springAmplitudePlot().yMinLabel }}
+              </text>
+            </svg>
+          </section>
+          <section class="computational-physics-plot-shell">
+            <h4>Phase Drift Plot</h4>
+            <svg
+              class="computational-physics-plot"
+              viewBox="0 0 360 160"
+              aria-label="Spring phase drift plot"
+            >
+              <line x1="28" y1="12" x2="28" y2="132" class="computational-physics-plot__axis" />
+              <line x1="28" y1="132" x2="348" y2="132" class="computational-physics-plot__axis" />
+              @for (series of springPhasePlot().series; track series.label) {
+                <path
+                  [attr.d]="series.path"
+                  [attr.stroke]="series.color"
+                  class="computational-physics-plot__path"
+                  transform="translate(28 12)"
+                />
+              }
+              <text x="28" y="148" class="computational-physics-plot__label">
+                {{ springPhasePlot().xStartLabel }}
+              </text>
+              <text x="270" y="148" class="computational-physics-plot__label">
+                {{ springPhasePlot().xEndLabel }}
+              </text>
+              <text x="6" y="16" class="computational-physics-plot__label">
+                {{ springPhasePlot().yMaxLabel }}
+              </text>
+              <text x="6" y="132" class="computational-physics-plot__label">
+                {{ springPhasePlot().yMinLabel }}
+              </text>
+            </svg>
+          </section>
+          <div class="computational-physics-plot-legend">
+            @for (series of springEnergyPlot().series; track series.label) {
+              <p>
+                <span
+                  class="computational-physics-plot-legend__swatch"
+                  [style.background]="series.color"
+                ></span>
+                {{ series.label }}
+              </p>
+            }
+          </div>
+          <button type="button" (click)="downloadInvariantReport()">Download Invariant CSV</button>
+        </div>
+      </article>
+    }
+
+    <article class="computational-physics-card computational-physics-card--payload">
+      <h3>JSON Round-Trip</h3>
+      <p>
+        Computational Physics payloads currently export the selected solver focus, timestep,
+        overlays, and sampled comparison trajectories.
+      </p>
+      <div class="computational-physics-actions computational-physics-actions--export">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+      </div>
+      <p class="computational-physics-page__message">{{ exportMessage() }}</p>
+      <textarea
+        rows="8"
+        [value]="importPayloadText()"
+        (input)="updateImportPayload($event)"
+      ></textarea>
+      <pre>{{ exportPreview() }}</pre>
+    </article>
+  </div>
+</section>

@@ -1,0 +1,309 @@
+<section class="plasma-page">
+  <header class="plasma-page__hero">
+    <div>
+      <p class="plasma-page__eyebrow">Phase 33</p>
+      <h2>Plasma Physics with Angular and WebGPU</h2>
+      <p class="plasma-page__lede">
+        Validated Phase 33 Plasma Physics unifies plasma oscillation, Debye screening, and magnetic
+        confinement through one shared Angular route, sampled diagnostics, export workflow, and
+        WebGPU viewport.
+      </p>
+    </div>
+    <div class="plasma-page__status-card">
+      <p class="plasma-page__status-label">Implementation Status</p>
+      <p class="plasma-page__status-value">{{ completionStatus() }}</p>
+      <p>{{ implementationSummary() }}</p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+    </div>
+  </header>
+
+  <section class="plasma-page__grid">
+    <article class="plasma-panel">
+      <h3>Validated Scenario Set</h3>
+      <div class="plasma-scenarios">
+        @for (scenario of scenarioPreviews; track scenario.id) {
+          <button
+            type="button"
+            class="plasma-scenario"
+            [class.plasma-scenario--active]="scenario.id === selectedScenario().id"
+            (click)="selectScenario(scenario.id)"
+          >
+            <strong>{{ scenario.name }}</strong>
+            <span>{{ scenario.summary }}</span>
+          </button>
+        }
+      </div>
+      <p>{{ scenarioSetSummary() }}</p>
+    </article>
+
+    <article class="plasma-panel">
+      <h3>{{ selectedScenario().name }}</h3>
+      <p>{{ selectedScenario().focusArea }}</p>
+      <ul class="plasma-metrics">
+        @for (row of metricRows(); track row.label) {
+          <li>
+            <span>{{ row.label }}</span>
+            <strong>{{ row.value }}</strong>
+          </li>
+        }
+      </ul>
+    </article>
+
+    <article class="plasma-panel">
+      <h3>Insight Cards</h3>
+      <div class="plasma-insights">
+        @for (card of insightCards(); track card.title) {
+          <section class="plasma-insight-card">
+            <h4>{{ card.title }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="plasma-panel plasma-panel--controls">
+      <h3>Scenario Controls</h3>
+      <label>
+        <span>Snapshot time</span>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          [value]="currentState().timeSeconds"
+          (input)="updateNumericField('timeSeconds', $event)"
+        />
+      </label>
+
+      @if (selectedScenario().id === "plasma-oscillation") {
+        <label>
+          <span>Electron density</span>
+          <input
+            type="number"
+            [value]="selectedScenario().electronDensityPerCubicMeter"
+            (input)="updateNumericField('electronDensityPerCubicMeter', $event)"
+          />
+        </label>
+        <label>
+          <span>Electron temperature</span>
+          <input
+            type="number"
+            [value]="selectedScenario().electronTemperatureElectronVolts"
+            (input)="updateNumericField('electronTemperatureElectronVolts', $event)"
+          />
+        </label>
+        <label>
+          <span>Perturbation amplitude</span>
+          <input
+            type="number"
+            [value]="selectedScenario().perturbationAmplitudePercent"
+            (input)="updateNumericField('perturbationAmplitudePercent', $event)"
+          />
+        </label>
+      }
+
+      @if (selectedScenario().id === "debye-screening") {
+        <label>
+          <span>Electron density</span>
+          <input
+            type="number"
+            [value]="selectedScenario().electronDensityPerCubicMeter"
+            (input)="updateNumericField('electronDensityPerCubicMeter', $event)"
+          />
+        </label>
+        <label>
+          <span>Electron temperature</span>
+          <input
+            type="number"
+            [value]="selectedScenario().electronTemperatureElectronVolts"
+            (input)="updateNumericField('electronTemperatureElectronVolts', $event)"
+          />
+        </label>
+        <label>
+          <span>Probe potential</span>
+          <input
+            type="number"
+            [value]="selectedScenario().probePotentialVolts"
+            (input)="updateNumericField('probePotentialVolts', $event)"
+          />
+        </label>
+      }
+
+      @if (selectedScenario().id === "magnetic-confinement") {
+        <label>
+          <span>Magnetic field</span>
+          <input
+            type="number"
+            [value]="selectedScenario().magneticFieldTesla"
+            (input)="updateNumericField('magneticFieldTesla', $event)"
+          />
+        </label>
+        <label>
+          <span>Plasma current</span>
+          <input
+            type="number"
+            [value]="selectedScenario().plasmaCurrentMegaAmperes"
+            (input)="updateNumericField('plasmaCurrentMegaAmperes', $event)"
+          />
+        </label>
+        <label>
+          <span>Major radius</span>
+          <input
+            type="number"
+            [value]="selectedScenario().majorRadiusMeters"
+            (input)="updateNumericField('majorRadiusMeters', $event)"
+          />
+        </label>
+      }
+
+      <div class="plasma-overlays">
+        <button type="button" (click)="toggleOverlay('showReferenceGuides')">
+          Reference guides
+        </button>
+        <button type="button" (click)="toggleOverlay('showActiveMarker')">Active marker</button>
+        <button type="button" (click)="toggleOverlay('showComparisonBand')">Comparison band</button>
+      </div>
+    </article>
+
+    <article class="plasma-panel plasma-panel--viewport">
+      <h3>Validated WebGPU Viewport</h3>
+      <canvas #viewport aria-label="Plasma Physics viewport placeholder"></canvas>
+      <p>{{ readinessSummary() }}</p>
+      <p>{{ viewportHint() }}</p>
+      <ul class="plasma-summary">
+        @for (row of viewportStatusRows(); track row.label) {
+          <li>
+            <strong>{{ row.label }}</strong>
+            <span>{{ row.value }}</span>
+          </li>
+        }
+      </ul>
+      <div class="plasma-overlay-labels">
+        <span>{{ overlayLabels().showReferenceGuides }}</span>
+        <span>{{ overlayLabels().showActiveMarker }}</span>
+        <span>{{ overlayLabels().showComparisonBand }}</span>
+      </div>
+      <p>{{ webGpuMessage() }}</p>
+      <p>{{ sampleSummary() }}</p>
+    </article>
+
+    <article class="plasma-panel plasma-panel--plot">
+      <h3>{{ samplePlotTitle() }}</h3>
+      <div class="plasma-plot">
+        <svg
+          viewBox="0 0 320 120"
+          [attr.aria-label]="samplePlotTitle()"
+          role="img"
+          tabindex="0"
+          (mousemove)="updateHoveredSample($event)"
+          (mouseleave)="clearHoveredSample()"
+          (focus)="focusPlotReadout()"
+          (keydown)="handlePlotKeydown($event)"
+        >
+          @for (guide of samplePlotGuides(); track guide.label) {
+            <path [attr.d]="guide.path" class="plasma-plot__guide" />
+          }
+          @if (hoveredCursorPath()) {
+            <path [attr.d]="hoveredCursorPath()" class="plasma-plot__cursor" />
+          }
+          @if (sampleComparisonPath()) {
+            <path [attr.d]="sampleComparisonPath()" class="plasma-plot__comparison" />
+          }
+          <path [attr.d]="samplePlotPath()" class="plasma-plot__path" />
+          @for (marker of samplePlotMarkers(); track marker.cx) {
+            <circle [attr.cx]="marker.cx" [attr.cy]="marker.cy" r="3" class="plasma-plot__marker" />
+          }
+        </svg>
+      </div>
+      <div class="visually-hidden" aria-live="polite">{{ hoveredSampleAnnouncement() }}</div>
+      <p>{{ sampleSummary() }}</p>
+      <div class="plasma-plot__controls">
+        <button
+          type="button"
+          (click)="selectFirstSample()"
+          [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+        >
+          First sampled state
+        </button>
+        <button
+          type="button"
+          (click)="stepHoveredSample(-1)"
+          (focus)="focusPlotReadout()"
+          [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+        >
+          Previous sampled state
+        </button>
+        <button
+          type="button"
+          (click)="stepHoveredSample(1)"
+          (focus)="focusPlotReadout()"
+          [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+        >
+          Next sampled state
+        </button>
+        <button
+          type="button"
+          (click)="selectLastSample()"
+          [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+        >
+          Last sampled state
+        </button>
+      </div>
+      @if (plotReadoutRows().length > 0) {
+        <ul class="plasma-summary plasma-plot__readout">
+          @for (row of plotReadoutRows(); track row.label) {
+            <li>
+              <strong>{{ row.label }}</strong>
+              <span>{{ row.value }}</span>
+            </li>
+          }
+        </ul>
+      }
+      <p>{{ samplePlotSummary() }}</p>
+    </article>
+
+    <article class="plasma-panel">
+      <h3>Summary Rows</h3>
+      <ul class="plasma-summary">
+        @for (row of reportSummaryRows(); track row.metric) {
+          <li>
+            <strong>{{ row.label }}</strong>
+            <span>{{ row.value }}</span>
+            <p>{{ row.detail }}</p>
+          </li>
+        }
+      </ul>
+    </article>
+
+    <article class="plasma-panel">
+      <h3>JSON Payload Preview</h3>
+      <div class="plasma-actions">
+        <button type="button" (click)="copyJson()">Copy JSON</button>
+        <button type="button" (click)="downloadJson()">Download JSON</button>
+        <span>{{ exportMessage() }}</span>
+      </div>
+      <textarea readonly [value]="exportPreview()"></textarea>
+      <p>{{ previewSummary() }}</p>
+    </article>
+
+    <article class="plasma-panel">
+      <h3>CSV Report Preview</h3>
+      <div class="plasma-actions">
+        <button type="button" (click)="downloadCsv()">Download CSV</button>
+      </div>
+      <textarea readonly [value]="reportPreview()"></textarea>
+      <p>{{ previewSummary() }}</p>
+    </article>
+
+    <article class="plasma-panel plasma-panel--restore">
+      <h3>Restore JSON Payload</h3>
+      <textarea [value]="importPayloadText()" (input)="updateImportPayload($event)"></textarea>
+      <button type="button" (click)="restorePayload()">Restore Plasma Payload</button>
+      <p>{{ restoreSummary() }}</p>
+    </article>
+  </section>
+</section>

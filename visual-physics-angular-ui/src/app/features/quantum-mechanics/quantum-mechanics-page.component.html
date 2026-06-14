@@ -1,0 +1,223 @@
+<section class="quantum-page">
+  <div class="quantum-page__hero">
+    <p class="quantum-page__eyebrow">Phase 19</p>
+    <h2>Quantum Mechanics with Angular and WebGPU</h2>
+    <p class="quantum-page__summary">
+      Phase 19 delivers a shared Angular Quantum Mechanics feature covering particle-in-a-box,
+      finite-barrier tunneling, and double-slit interference through one page, one state service,
+      shared JSON export and restore, CSV reporting, and a deterministic viewport path.
+    </p>
+  </div>
+
+  <div class="quantum-page__grid">
+    <article class="quantum-card quantum-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+      <p>Completion status: <strong>Phase 19 implementation complete</strong>.</p>
+      <label class="quantum-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="quantum-card quantum-card--scenario">
+      <h3>Phase 19 Scenario Set</h3>
+      <section class="quantum-scenario">
+        <div class="quantum-scenario__header">
+          <h4>{{ selectedScenario().name }}</h4>
+          <span>{{ selectedScenario().status }}</span>
+        </div>
+        <p>{{ selectedScenario().focusArea }}</p>
+        <p>{{ selectedScenario().equationSummary }}</p>
+      </section>
+      <p class="quantum-card__note">
+        Current implementation scope includes `particle-in-a-box`,
+        `finite-potential-well-tunneling`, and `double-slit-interference`.
+      </p>
+    </article>
+
+    <article class="quantum-card quantum-card--viewport">
+      <h3>Quantum Viewport</h3>
+      <div class="quantum-viewport">
+        <canvas #viewport class="quantum-viewport__canvas"></canvas>
+        <p>{{ viewportHint() }}</p>
+        <p>{{ webGpuMessage() }}</p>
+      </div>
+      <div class="quantum-actions" aria-label="Quantum overlay toggles">
+        <button type="button" (click)="toggleOverlay('showProbabilityGuide')">
+          {{ isInterferenceScenario() ? "Intensity trace" : "Probability guide" }}
+          {{ overlays().showProbabilityGuide ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showPotentialGuide')">
+          {{
+            isParticleScenario()
+              ? "State labels"
+              : isTunnelingScenario()
+                ? "Barrier profile"
+                : "Optical axis"
+          }}
+          {{ overlays().showPotentialGuide ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showPhaseGuide')">
+          {{
+            isParticleScenario()
+              ? "Standing wave"
+              : isTunnelingScenario()
+                ? "Transmission labels"
+                : "Fringe labels"
+          }}
+          {{ overlays().showPhaseGuide ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="quantum-card quantum-card--controls">
+      <h3>{{ controlsTitle() }}</h3>
+      @if (isParticleScenario()) {
+        <div class="quantum-fields">
+          <label class="quantum-field">
+            <span>Box length (nm)</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="particleMetrics().boxLengthNanometers"
+              (input)="updateScenarioParameter('boxLengthNanometers', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Quantum number n</span>
+            <input
+              type="number"
+              step="1"
+              [value]="particleMetrics().quantumNumber"
+              (input)="updateScenarioParameter('quantumNumber', $event)"
+            />
+          </label>
+        </div>
+      } @else if (isTunnelingScenario()) {
+        <div class="quantum-fields">
+          <label class="quantum-field">
+            <span>Particle energy (eV)</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="tunnelingMetrics().particleEnergyEv"
+              (input)="updateScenarioParameter('particleEnergyEv', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Barrier height (eV)</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="tunnelingMetrics().barrierHeightEv"
+              (input)="updateScenarioParameter('barrierHeightEv', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Barrier width (nm)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="tunnelingMetrics().barrierWidthNanometers"
+              (input)="updateScenarioParameter('barrierWidthNanometers', $event)"
+            />
+          </label>
+        </div>
+      } @else {
+        <div class="quantum-fields">
+          <label class="quantum-field">
+            <span>Wavelength (nm)</span>
+            <input
+              type="number"
+              step="5"
+              [value]="interferenceMetrics().wavelengthNanometers"
+              (input)="updateScenarioParameter('wavelengthNanometers', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Slit separation (um)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="interferenceMetrics().slitSeparationMicrometers"
+              (input)="updateScenarioParameter('slitSeparationMicrometers', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Slit width (um)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="interferenceMetrics().slitWidthMicrometers"
+              (input)="updateScenarioParameter('slitWidthMicrometers', $event)"
+            />
+          </label>
+          <label class="quantum-field">
+            <span>Screen distance (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="interferenceMetrics().screenDistanceMeters"
+              (input)="updateScenarioParameter('screenDistanceMeters', $event)"
+            />
+          </label>
+        </div>
+      }
+      <p class="quantum-card__note">
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </article>
+
+    <article class="quantum-card quantum-card--insights">
+      <h3>Insight Cards</h3>
+      <div class="quantum-insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="quantum-insight">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+      <p>{{ residualSummary() }}</p>
+    </article>
+
+    <article class="quantum-card quantum-card--workflow">
+      <h3>Export and Restore</h3>
+      <div class="quantum-actions">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="downloadReportCsv()">Download CSV</button>
+      </div>
+      <label class="quantum-field">
+        <span>Import JSON</span>
+        <textarea
+          rows="10"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <div class="quantum-actions">
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+        <label class="quantum-upload">
+          <span>Load file</span>
+          <input
+            type="file"
+            accept="application/json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+      </div>
+      <p>{{ exportMessage() }}</p>
+      <pre>{{ exportPreview() }}</pre>
+    </article>
+  </div>
+</section>

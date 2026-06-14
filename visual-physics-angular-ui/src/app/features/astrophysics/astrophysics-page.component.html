@@ -1,0 +1,508 @@
+<section class="astrophysics-page">
+  <header class="astrophysics-page__hero">
+    <p class="astrophysics-page__eyebrow">Phase 25</p>
+    <h2>Astrophysics</h2>
+    <p class="astrophysics-page__lede">
+      Phase 25 now ships a live Angular and WebGPU Astrophysics surface for planetary orbit, stellar
+      luminosity, and Hubble expansion through one shared workflow.
+    </p>
+  </header>
+
+  <section class="astrophysics-page__status" aria-label="Astrophysics status">
+    <div>
+      <h3>Current status</h3>
+      <p>{{ selectedScenario().status }}</p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+      <p>
+        Completion status: <strong>{{ completionStatus() }}</strong
+        >.
+      </p>
+    </div>
+    <div>
+      <h3>Next milestone</h3>
+      <p>{{ nextMilestone() }}</p>
+    </div>
+  </section>
+
+  <section class="astrophysics-page__scenarios" aria-label="Planned scenarios">
+    <h3>Scenario set</h3>
+    <div class="astrophysics-page__scenario-grid">
+      @for (scenario of scenarios; track scenario.id) {
+        <button
+          type="button"
+          class="astrophysics-page__scenario-card"
+          [class.astrophysics-page__scenario-card--active]="scenario.id === selectedScenario().id"
+          (click)="selectScenario(scenario.id)"
+        >
+          <h4>{{ scenario.name }}</h4>
+          <p>{{ scenario.summary }}</p>
+        </button>
+      }
+    </div>
+  </section>
+
+  <section class="astrophysics-page__details" aria-label="Selected scenario diagnostics">
+    <header>
+      <h3>{{ selectedScenario().name }}</h3>
+      <p>{{ selectedScenario().summary }}</p>
+    </header>
+    <div class="astrophysics-page__metric-grid">
+      <div>
+        <span>Equation</span>
+        <strong>{{ selectedScenario().equationSummary }}</strong>
+      </div>
+      <div>
+        <span>Focus area</span>
+        <strong>{{ selectedScenario().focusArea }}</strong>
+      </div>
+      <div>
+        <span>Sample count</span>
+        <strong>{{ sampledStates().length }}</strong>
+      </div>
+      <div>
+        <span>Stable</span>
+        <strong>{{ currentState().stable ? "Yes" : "No" }}</strong>
+      </div>
+      @if (isPlanetaryOrbit()) {
+        <div>
+          <span>Orbital period</span>
+          <strong>{{ (currentState().orbitalPeriodDays ?? 0).toFixed(1) }} days</strong>
+        </div>
+        <div>
+          <span>Orbital speed</span>
+          <strong
+            >{{ (currentState().orbitalSpeedKilometersPerSecond ?? 0).toFixed(2) }} km/s</strong
+          >
+        </div>
+        <div>
+          <span>Escape speed</span>
+          <strong
+            >{{ (currentState().escapeSpeedKilometersPerSecond ?? 0).toFixed(2) }} km/s</strong
+          >
+        </div>
+        <div>
+          <span>Specific orbital energy</span>
+          <strong
+            >{{
+              (currentState().specificOrbitalEnergyMegajoulesPerKilogram ?? 0).toFixed(3)
+            }}
+            MJ/kg</strong
+          >
+        </div>
+      }
+      @if (isStellarLuminosity()) {
+        <div>
+          <span>Luminosity</span>
+          <strong>{{ (currentState().luminositySolarUnits ?? 0).toFixed(2) }} Lsun</strong>
+        </div>
+        <div>
+          <span>Inner habitable zone</span>
+          <strong
+            >{{ (currentState().habitableZoneInnerAstronomicalUnits ?? 0).toFixed(2) }} AU</strong
+          >
+        </div>
+        <div>
+          <span>Outer habitable zone</span>
+          <strong
+            >{{ (currentState().habitableZoneOuterAstronomicalUnits ?? 0).toFixed(2) }} AU</strong
+          >
+        </div>
+        <div>
+          <span>Surface temperature</span>
+          <strong>{{ (currentState().surfaceTemperatureKelvin ?? 0).toFixed(0) }} K</strong>
+        </div>
+      }
+      @if (isHubbleExpansion()) {
+        <div>
+          <span>Recession velocity</span>
+          <strong
+            >{{
+              (currentState().recessionVelocityKilometersPerSecond ?? 0).toFixed(0)
+            }}
+            km/s</strong
+          >
+        </div>
+        <div>
+          <span>Approximate redshift</span>
+          <strong>{{ (currentState().redshift ?? 0).toFixed(4) }}</strong>
+        </div>
+        <div>
+          <span>Light-travel scale</span>
+          <strong
+            >{{ (currentState().lightTravelTimeBillionYears ?? 0).toFixed(2) }} billion
+            years</strong
+          >
+        </div>
+        <div>
+          <span>Hubble constant</span>
+          <strong
+            >{{
+              (currentState().hubbleConstantKilometersPerSecondPerMegaparsec ?? 0).toFixed(1)
+            }}
+            km/s/Mpc</strong
+          >
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="astrophysics-page__details" aria-label="Astrophysics WebGPU viewport">
+    <div class="astrophysics-page__panel">
+      <h3>Viewport</h3>
+      <p>{{ webGpuMessage() }}</p>
+      <canvas #viewport class="astrophysics-page__viewport" width="640" height="360"></canvas>
+      <div class="viewport__legend" aria-label="Viewport legend">
+        @for (item of viewportLegendItems(); track item.label) {
+          <div class="legend-item" [class.legend-item--inactive]="!item.active">
+            <span
+              class="legend-swatch"
+              [class.legend-swatch--position]="item.kind === 'position'"
+              [class.legend-swatch--velocity]="item.kind === 'velocity'"
+              [class.legend-swatch--acceleration]="item.kind === 'acceleration'"
+            ></span>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+      <div class="astrophysics-page__actions" aria-label="Astrophysics overlay toggles">
+        @for (item of viewportLegendItems(); track item.label) {
+          <button
+            type="button"
+            class="astrophysics-page__button astrophysics-page__button--secondary"
+            (click)="toggleOverlay(item.key)"
+          >
+            {{ item.label }} {{ item.active ? "on" : "off" }}
+          </button>
+        }
+      </div>
+      <div class="astrophysics-page__summary-item">
+        <h4>Viewport context</h4>
+        <strong>{{ viewportContextSummary() }}</strong>
+        <div class="astrophysics-page__actions">
+          @for (row of viewportContextRows(); track row.label) {
+            <span>{{ row.label }}: {{ row.value }}</span>
+          }
+        </div>
+      </div>
+      <p>{{ viewportSummary() }}</p>
+    </div>
+  </section>
+
+  <section class="astrophysics-page__details" aria-label="Astrophysics controls and readouts">
+    <div class="astrophysics-page__panel">
+      <h3>Controls</h3>
+      @if (isPlanetaryOrbit()) {
+        <label class="astrophysics-page__field">
+          <span>Central mass (solar masses)</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().centralMassSolarMasses ?? 1"
+            (input)="updateScenarioParameter('centralMassSolarMasses', $event)"
+          />
+        </label>
+        <label class="astrophysics-page__field">
+          <span>Orbital radius (AU)</span>
+          <input
+            type="number"
+            step="0.05"
+            [value]="selectedScenario().orbitalRadiusAstronomicalUnits ?? 1"
+            (input)="updateScenarioParameter('orbitalRadiusAstronomicalUnits', $event)"
+          />
+        </label>
+        <label class="astrophysics-page__field">
+          <span>Orbital eccentricity</span>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="0.85"
+            [value]="selectedScenario().orbitalEccentricity ?? 0.12"
+            (input)="updateScenarioParameter('orbitalEccentricity', $event)"
+          />
+        </label>
+      } @else if (isStellarLuminosity()) {
+        <label class="astrophysics-page__field">
+          <span>Stellar mass (solar masses)</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().stellarMassSolarMasses ?? 1"
+            (input)="updateScenarioParameter('stellarMassSolarMasses', $event)"
+          />
+        </label>
+        <label class="astrophysics-page__field">
+          <span>Stellar radius (solar radii)</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="selectedScenario().stellarRadiusSolarRadii ?? 1"
+            (input)="updateScenarioParameter('stellarRadiusSolarRadii', $event)"
+          />
+        </label>
+        <label class="astrophysics-page__field">
+          <span>Surface temperature (K)</span>
+          <input
+            type="number"
+            step="100"
+            [value]="selectedScenario().surfaceTemperatureKelvin ?? 5772"
+            (input)="updateScenarioParameter('surfaceTemperatureKelvin', $event)"
+          />
+        </label>
+      } @else {
+        <label class="astrophysics-page__field">
+          <span>Distance (Mpc)</span>
+          <input
+            type="number"
+            step="10"
+            [value]="selectedScenario().distanceMegaparsecs ?? 400"
+            (input)="updateScenarioParameter('distanceMegaparsecs', $event)"
+          />
+        </label>
+        <label class="astrophysics-page__field">
+          <span>Hubble constant (km/s/Mpc)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="selectedScenario().hubbleConstantKilometersPerSecondPerMegaparsec ?? 70"
+            (input)="
+              updateScenarioParameter('hubbleConstantKilometersPerSecondPerMegaparsec', $event)
+            "
+          />
+        </label>
+      }
+      <label class="astrophysics-page__field">
+        <span>Snapshot time (s)</span>
+        <input
+          type="number"
+          step="0.05"
+          min="0"
+          [value]="currentState().timeSeconds"
+          (input)="updateScenarioParameter('timeSeconds', $event)"
+        />
+      </label>
+      <button type="button" class="astrophysics-page__button" (click)="resetScenario()">
+        Reset scenario
+      </button>
+      <p>
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </div>
+    <div class="astrophysics-page__panel">
+      <h3>Readouts</h3>
+      <dl class="astrophysics-page__readouts">
+        @for (row of liveReadoutRows(); track row.label) {
+          <div>
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        }
+      </dl>
+      <p>
+        <strong>{{ exportMessage() }}</strong>
+      </p>
+    </div>
+  </section>
+
+  <section class="astrophysics-page__details" aria-label="Astrophysics shared summaries">
+    <div class="astrophysics-page__panel">
+      <h3>Scenario summary</h3>
+      <div class="astrophysics-page__summary-list">
+        @for (row of reportSummaryRows(); track row.metric) {
+          <section class="astrophysics-page__summary-item">
+            <h4>{{ row.label }}</h4>
+            <strong>{{ row.displayValue }}</strong>
+            <p>{{ row.detail }}</p>
+          </section>
+        }
+      </div>
+    </div>
+    <div class="astrophysics-page__panel">
+      <h3>Insight cards</h3>
+      <div class="astrophysics-page__summary-list">
+        @for (card of insightCards(); track card.label) {
+          <section class="astrophysics-page__summary-item">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="astrophysics-page__details" aria-label="Astrophysics plot and export previews">
+    <div class="astrophysics-page__panel">
+      <h3>{{ samplePlotTitle() }}</h3>
+      <div class="astrophysics-page__plot">
+        <div
+          class="astrophysics-page__plot-surface"
+          [attr.aria-label]="samplePlotTitle()"
+          role="img"
+          tabindex="0"
+          (focus)="focusPlotReadout()"
+          (blur)="clearHoveredSample()"
+          (keydown)="handlePlotKeydown($event)"
+          (mousemove)="updateHoveredSample($event)"
+          (mouseleave)="clearHoveredSample()"
+        >
+          <svg viewBox="0 0 320 120" aria-hidden="true">
+            @if (showPlotGuides()) {
+              @for (guide of samplePlotGuides(); track guide.label) {
+                <path [attr.d]="guide.path" class="astrophysics-page__plot-guide" />
+              }
+            }
+            @if (showPlotComparisonPath() && sampleComparisonPath()) {
+              <path [attr.d]="sampleComparisonPath()" class="astrophysics-page__plot-comparison" />
+            }
+            @if (hoveredCursorPath()) {
+              <path [attr.d]="hoveredCursorPath()" class="astrophysics-page__plot-cursor" />
+            }
+            @if (showPlotMarkers()) {
+              @for (marker of samplePlotMarkers(); track marker.cx) {
+                <circle
+                  [attr.cx]="marker.cx"
+                  [attr.cy]="marker.cy"
+                  r="2.4"
+                  class="astrophysics-page__plot-marker"
+                />
+              }
+            }
+            <path [attr.d]="samplePlotPath()" class="astrophysics-page__plot-path" />
+          </svg>
+        </div>
+        @if (showPlotGuides()) {
+          <div class="astrophysics-page__plot-guides">
+            @for (guide of samplePlotGuides(); track guide.label) {
+              <p>
+                <strong>{{ guide.label }}:</strong> {{ guide.value }}
+              </p>
+            }
+          </div>
+        }
+        <div class="astrophysics-page__summary-item">
+          <div class="visually-hidden" aria-live="polite">{{ hoveredSampleAnnouncement() }}</div>
+          <p>
+            <strong>{{ hoveredSampleLabel() }}</strong>
+          </p>
+          <div
+            class="astrophysics-page__actions"
+            aria-label="Astrophysics plot sample navigation controls"
+          >
+            <button
+              type="button"
+              class="astrophysics-page__button astrophysics-page__button--secondary"
+              (click)="selectFirstSample()"
+              [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+            >
+              First sample
+            </button>
+            <button
+              type="button"
+              class="astrophysics-page__button astrophysics-page__button--secondary"
+              (click)="stepHoveredSample(-1)"
+              [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+            >
+              Previous sample
+            </button>
+            <button
+              type="button"
+              class="astrophysics-page__button astrophysics-page__button--secondary"
+              (click)="stepHoveredSample(1)"
+              [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+            >
+              Next sample
+            </button>
+            <button
+              type="button"
+              class="astrophysics-page__button astrophysics-page__button--secondary"
+              (click)="selectLastSample()"
+              [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+            >
+              Last sample
+            </button>
+          </div>
+          @if (plotReadoutRows().length > 0) {
+            <div class="astrophysics-page__actions">
+              @for (row of plotReadoutRows(); track row.label) {
+                <span>{{ row.label }}: {{ row.value }}</span>
+              }
+            </div>
+          }
+        </div>
+        <p>{{ samplePlotSummary() }}</p>
+      </div>
+    </div>
+    <div class="astrophysics-page__panel">
+      <h3>Export preview</h3>
+      <p>
+        The active Astrophysics scenario now drives shared JSON payload and summary-first CSV
+        previews.
+      </p>
+      <div class="astrophysics-page__actions">
+        <button
+          type="button"
+          class="astrophysics-page__button astrophysics-page__button--secondary"
+          (click)="toggleOverlay('showReferenceGuides')"
+        >
+          {{ overlayLabels().showReferenceGuides }}
+          {{ overlays().showReferenceGuides ? "on" : "off" }}
+        </button>
+        <button
+          type="button"
+          class="astrophysics-page__button astrophysics-page__button--secondary"
+          (click)="toggleOverlay('showActiveMarker')"
+        >
+          {{ overlayLabels().showActiveMarker }} {{ overlays().showActiveMarker ? "on" : "off" }}
+        </button>
+        <button
+          type="button"
+          class="astrophysics-page__button astrophysics-page__button--secondary"
+          (click)="toggleOverlay('showComparisonBand')"
+        >
+          {{ overlayLabels().showComparisonBand }}
+          {{ overlays().showComparisonBand ? "on" : "off" }}
+        </button>
+      </div>
+      <div class="astrophysics-page__actions">
+        <button type="button" class="astrophysics-page__button" (click)="copyScenarioState()">
+          Copy JSON
+        </button>
+        <button type="button" class="astrophysics-page__button" (click)="downloadScenarioState()">
+          Download JSON
+        </button>
+        <button type="button" class="astrophysics-page__button" (click)="downloadReportCsv()">
+          Download CSV
+        </button>
+      </div>
+      <pre class="astrophysics-page__code-block">{{ exportPreview() }}</pre>
+      <h3>CSV preview</h3>
+      <pre class="astrophysics-page__code-block">{{ reportPreview() }}</pre>
+      <h3>Import JSON</h3>
+      <textarea
+        class="astrophysics-page__textarea"
+        [value]="importPayloadText()"
+        (input)="updateImportPayload($event)"
+        aria-label="Astrophysics import payload"
+      ></textarea>
+      <div class="astrophysics-page__actions">
+        <label
+          class="astrophysics-page__button astrophysics-page__button--secondary astrophysics-page__file-button"
+        >
+          Import file
+          <input
+            type="file"
+            accept="application/json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+        <button type="button" class="astrophysics-page__button" (click)="importScenarioState()">
+          Import JSON
+        </button>
+      </div>
+    </div>
+  </section>
+</section>

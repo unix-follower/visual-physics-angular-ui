@@ -1,0 +1,292 @@
+.waves-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.waves-page__grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.waves-page__hero,
+.waves-page__card {
+  padding: 1.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(18, 38, 84, 0.92), rgba(10, 20, 44, 0.96));
+  color: #f6f8ff;
+  box-shadow: 0 1rem 2.5rem rgba(3, 9, 27, 0.18);
+}
+
+.waves-page__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9ec5ff;
+}
+
+.waves-page__hero h2,
+.waves-page__card h3 {
+  margin: 0 0 0.75rem;
+}
+
+.waves-page__hero p,
+.waves-page__card p,
+.waves-page__card li {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.waves-page__equation {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 0.95rem;
+  color: #c8daff;
+}
+
+.waves-page__field {
+  display: grid;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+}
+
+.waves-page__field span {
+  font-weight: 600;
+  color: #c8daff;
+}
+
+.waves-page__field input,
+.waves-page__field select,
+.waves-page__field textarea {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid rgba(158, 197, 255, 0.35);
+  border-radius: 0.75rem;
+  background: rgba(5, 11, 25, 0.35);
+  color: inherit;
+}
+
+.waves-page__field textarea {
+  resize: vertical;
+  font: inherit;
+}
+
+.waves-page__button {
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #9ec5ff;
+  color: #0b1a38;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.waves-page__button--secondary {
+  background: rgba(158, 197, 255, 0.18);
+  color: #f6f8ff;
+  border: 1px solid rgba(158, 197, 255, 0.28);
+}
+
+.waves-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.waves-page__upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(158, 197, 255, 0.28);
+  background: rgba(158, 197, 255, 0.12);
+  color: #f6f8ff;
+  font-weight: 700;
+}
+
+.waves-page__upload input {
+  max-width: 12rem;
+}
+
+.waves-page__viewport {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.waves-page__canvas {
+  width: 100%;
+  min-height: 220px;
+  border-radius: 1rem;
+  background: radial-gradient(circle at top, rgba(76, 120, 191, 0.18), rgba(6, 10, 22, 0.92));
+  border: 1px solid rgba(158, 197, 255, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.waves-page__readouts {
+  display: grid;
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.waves-page__readouts div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.waves-page__readouts dt {
+  font-weight: 600;
+  color: #c8daff;
+}
+
+.waves-page__readouts dd {
+  margin: 0;
+}
+
+.waves-page__summary-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.waves-page__summary-item,
+.waves-page__insight,
+.waves-page__plot-readout {
+  display: grid;
+  border-radius: 0.85rem;
+  background: rgba(5, 11, 25, 0.32);
+  border: 1px solid rgba(158, 197, 255, 0.14);
+}
+
+.waves-page__summary-item,
+.waves-page__insight {
+  gap: 0.35rem;
+  padding: 0.95rem;
+}
+
+.waves-page__summary-item h4,
+.waves-page__insight h4 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #c8daff;
+}
+
+.waves-page__summary-item strong,
+.waves-page__insight strong {
+  font-size: 1.1rem;
+}
+
+.waves-page__insights {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.waves-page__plot {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.waves-page__plot svg {
+  width: 100%;
+  border-radius: 0.85rem;
+  background: rgba(5, 11, 25, 0.45);
+  border: 1px solid rgba(158, 197, 255, 0.18);
+}
+
+.waves-page__plot-guide {
+  fill: none;
+  stroke: rgba(200, 218, 255, 0.38);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.waves-page__plot-reference {
+  fill: none;
+  stroke: rgba(134, 245, 208, 0.7);
+  stroke-width: 1.25;
+}
+
+.waves-page__plot-marker {
+  fill: #f6f8ff;
+  stroke: #9ec5ff;
+  stroke-width: 1;
+}
+
+.waves-page__plot-cursor {
+  fill: none;
+  stroke: rgba(255, 214, 102, 0.9);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.waves-page__plot-path {
+  fill: none;
+  stroke: #9ec5ff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.waves-page__plot-guides,
+.waves-page__plot-readout-rows {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.92rem;
+  color: #c8daff;
+}
+
+.waves-page__plot-guides p,
+.waves-page__plot-readout p {
+  margin: 0;
+}
+
+.waves-page__plot-readout {
+  gap: 0.6rem;
+  padding: 0.9rem;
+}
+
+.waves-page__plot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.waves-page__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.waves-page__card ul {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.waves-page__preview-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+
+.waves-page__preview-grid h4 {
+  margin: 0 0 0.75rem;
+}
+
+.waves-page__preview-grid pre {
+  margin: 0;
+  padding: 1rem;
+  border-radius: 0.85rem;
+  background: rgba(5, 11, 25, 0.45);
+  overflow: auto;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -1,0 +1,157 @@
+<div class="shell">
+  <header class="shell__header">
+    <div>
+      <p class="shell__eyebrow">Phases 1-29</p>
+      <h1>{{ title }}</h1>
+      <p class="shell__subtitle">
+        Browser-first physics tools in Angular and WebGPU, with reusable simulation contracts across
+        domains, now expanding into computational physics, electronics, circuits, fluid mechanics,
+        thermodynamics, optics, quantum mechanics, waves with acoustics, relativity, astrophysics,
+        atmospheric physics, and solid state physics.
+      </p>
+    </div>
+
+    <nav aria-label="Physics domains" class="shell__nav">
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/kinematics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Kinematics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/dynamics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Dynamics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/statics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Statics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/electromagnetism"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Electromagnetism
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/computational-physics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Computational / Numerical
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/electronics-and-circuits"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Electronics / Circuits
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/fluid-mechanics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Fluid Mechanics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/thermodynamics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Thermodynamics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/optics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Optics / Light
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/quantum-mechanics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Quantum Mechanics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/waves-and-acoustics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Waves / Acoustics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/relativity"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Relativity
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/astrophysics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Astrophysics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/atmospheric-physics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Atmospheric Physics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/solid-state-physics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Solid State Physics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/nuclear-and-particle-physics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Nuclear / Particle Physics
+      </a>
+      <a
+        ariaCurrentWhenActive="page"
+        class="shell__nav-link"
+        routerLink="/plasma-physics"
+        routerLinkActive="shell__nav-link--active"
+      >
+        Plasma Physics
+      </a>
+    </nav>
+  </header>
+
+  <main class="shell__content">
+    <router-outlet />
+  </main>
+</div>

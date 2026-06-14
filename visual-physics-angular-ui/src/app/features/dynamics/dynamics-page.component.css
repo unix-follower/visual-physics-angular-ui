@@ -1,0 +1,287 @@
+.dynamics-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.dynamics-controls {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.dynamics-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dynamics-controls__row--import {
+  margin-top: 1rem;
+  align-items: center;
+}
+
+.dynamics-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.dynamics-panel {
+  padding: 1.5rem;
+  border: 1px solid rgba(125, 175, 210, 0.2);
+  border-radius: 1.25rem;
+  background: rgba(9, 18, 33, 0.8);
+  box-shadow: 0 18px 48px rgba(2, 6, 23, 0.24);
+  backdrop-filter: blur(18px);
+}
+
+.dynamics-panel--hero {
+  background:
+    linear-gradient(135deg, rgba(14, 116, 144, 0.28), rgba(9, 18, 33, 0.9)), rgba(9, 18, 33, 0.88);
+}
+
+.dynamics-panel--viewport {
+  grid-column: 1 / -1;
+}
+
+.dynamics-panel__eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(148, 193, 216, 0.82);
+}
+
+.dynamics-panel h2,
+.dynamics-panel h3,
+.dynamics-panel h4 {
+  margin: 0;
+  color: #f8fbff;
+}
+
+.dynamics-panel__text {
+  margin: 0.9rem 0 0;
+  max-width: 62ch;
+  color: rgba(216, 230, 240, 0.92);
+  line-height: 1.65;
+}
+
+.dynamics-panel__text--compact {
+  margin-top: 0.65rem;
+}
+
+.dynamics-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.dynamics-viewport__canvas {
+  width: 100%;
+  min-height: 320px;
+  display: block;
+  margin-top: 1rem;
+  border-radius: 1rem;
+  background: radial-gradient(circle at top, rgba(13, 36, 61, 0.8), rgba(3, 9, 19, 0.95));
+  border: 1px solid rgba(125, 175, 210, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(125, 175, 210, 0.08);
+}
+
+.dynamics-list {
+  margin: 1rem 0 0;
+  padding-left: 1.2rem;
+  color: rgba(216, 230, 240, 0.92);
+  line-height: 1.8;
+}
+
+.dynamics-insights-grid {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.dynamics-insight-card {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(125, 175, 210, 0.18);
+  background: rgba(4, 10, 20, 0.55);
+}
+
+.dynamics-insight-card p {
+  margin: 0;
+  color: rgba(216, 230, 240, 0.82);
+  line-height: 1.5;
+}
+
+.dynamics-field {
+  display: grid;
+  gap: 0.45rem;
+  color: rgba(216, 230, 240, 0.92);
+}
+
+.dynamics-field--wide {
+  grid-column: 1 / -1;
+}
+
+.dynamics-field span {
+  font-size: 0.9rem;
+  color: rgba(148, 193, 216, 0.82);
+}
+
+.dynamics-field select,
+.dynamics-field input,
+.dynamics-textarea {
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(125, 175, 210, 0.25);
+  border-radius: 0.9rem;
+  background: rgba(5, 12, 24, 0.75);
+  color: #f8fbff;
+}
+
+.dynamics-textarea {
+  min-height: 10rem;
+  resize: vertical;
+  font: inherit;
+}
+
+.dynamics-field input[type="range"] {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.dynamics-readouts {
+  display: grid;
+  gap: 0.9rem;
+  margin: 1rem 0 0;
+}
+
+.dynamics-readouts--summary dd {
+  white-space: normal;
+}
+
+.dynamics-readouts div {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(125, 175, 210, 0.18);
+  border-radius: 0.95rem;
+  background: rgba(4, 10, 20, 0.55);
+}
+
+.dynamics-readouts dt {
+  margin: 0;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 193, 216, 0.82);
+}
+
+.dynamics-readouts dd {
+  margin: 0.4rem 0 0;
+  color: #f8fbff;
+  font-size: 1rem;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.dynamics-parameter-sections {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.dynamics-parameter-section {
+  padding: 1rem;
+  border: 1px solid rgba(125, 175, 210, 0.18);
+  border-radius: 1rem;
+  background: rgba(4, 10, 20, 0.55);
+}
+
+.dynamics-parameter-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  margin-top: 0.9rem;
+}
+
+.dynamics-graphs {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.dynamics-graphs__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dynamics-graph {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.dynamics-graph figcaption {
+  font-size: 0.9rem;
+  color: #d7e8fb;
+}
+
+.dynamics-graph svg {
+  width: 100%;
+  height: 7rem;
+  padding: 0.35rem;
+  border-radius: 1rem;
+  background: rgba(5, 16, 28, 0.8);
+  border: 1px solid rgba(125, 175, 210, 0.12);
+}
+
+.dynamics-graph__line {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.dynamics-graph__line--x {
+  stroke: #58d8ff;
+}
+
+.dynamics-graph__line--y {
+  stroke: #ff8a5b;
+}
+
+.dynamics-graph__line--speed {
+  stroke: #a3ff8f;
+}
+
+.dynamics-graph__line--energy {
+  stroke: #ffd166;
+}
+
+button {
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, rgba(8, 145, 178, 0.95), rgba(14, 116, 144, 0.88));
+  color: #f8fbff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.button--ghost {
+  background: rgba(5, 12, 24, 0.45);
+  border-color: rgba(125, 175, 210, 0.25);
+}
+
+@media (max-width: 720px) {
+  .dynamics-panel__header {
+    flex-direction: column;
+  }
+
+  .dynamics-graphs__grid {
+    grid-template-columns: 1fr;
+  }
+}

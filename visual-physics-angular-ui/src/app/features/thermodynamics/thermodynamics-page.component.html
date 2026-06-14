@@ -1,0 +1,288 @@
+<section class="thermo-page">
+  <div class="thermo-page__hero">
+    <p class="thermo-page__eyebrow">Phase 15</p>
+    <h2>Thermodynamics with Angular and WebGPU</h2>
+    <p class="thermo-page__summary">
+      Phase 15 now includes ideal-gas state, transient heat-conduction, and Carnot-cycle slices that
+      extend the shared Angular page, payload, CSV export, and WebGPU viewport pattern into
+      thermodynamics.
+    </p>
+  </div>
+
+  <div class="thermo-page__grid">
+    <article class="thermo-card thermo-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        The Thermodynamics Angular surface now covers equation-of-state, transient slab-conduction,
+        and ideal-cycle slices using the same shared feature architecture already proven by Fluid
+        Mechanics and Electronics.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+      <p>Completion status: <strong>Phase 15 Angular feature complete</strong>.</p>
+      <label class="thermo-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="thermo-card thermo-card--scenario">
+      <h3>Phase 15 Scenario Set</h3>
+      @for (scenario of scenarioPreviews; track scenario.id) {
+        <section class="thermo-scenario">
+          <div class="thermo-scenario__header">
+            <h4>{{ scenario.name }}</h4>
+            <span>{{ scenario.status }}</span>
+          </div>
+          <p>{{ scenario.focusArea }}</p>
+          <p>{{ scenario.equationSummary }}</p>
+        </section>
+      }
+      <p class="thermo-card__note">
+        Current implementation includes the full planned Phase 15 set: `ideal-gas-state`,
+        `heat-conduction-slab`, and `carnot-cycle`.
+      </p>
+    </article>
+
+    <article class="thermo-card thermo-card--viewport">
+      <h3>Thermodynamics Viewport</h3>
+      <div class="thermo-viewport">
+        <canvas #viewport class="thermo-viewport__canvas"></canvas>
+        <p>{{ viewportHint() }}</p>
+        <p>{{ webGpuMessage() }}</p>
+      </div>
+      <div class="thermo-actions" aria-label="Thermodynamics overlay toggles">
+        <button type="button" (click)="toggleOverlay('showPressureCurve')">
+          {{ overlayLabels().showPressureCurve }} {{ overlays().showPressureCurve ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showParticleGuide')">
+          {{ overlayLabels().showParticleGuide }} {{ overlays().showParticleGuide ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showEnergyGuide')">
+          {{ overlayLabels().showEnergyGuide }} {{ overlays().showEnergyGuide ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="thermo-card thermo-card--controls">
+      <h3>{{ controlTitle() }}</h3>
+      <div class="thermo-fields">
+        @if (isIdealGasScenario()) {
+          <label class="thermo-field">
+            <span>Amount of gas (mol)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().amountMoles"
+              (input)="updateScenarioParameter('amountMoles', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Temperature (K)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().temperatureKelvin"
+              (input)="updateScenarioParameter('temperatureKelvin', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Volume (m^3)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().volumeCubicMeters"
+              (input)="updateScenarioParameter('volumeCubicMeters', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Molar mass (kg/mol)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().molarMassKgPerMol"
+              (input)="updateScenarioParameter('molarMassKgPerMol', $event)"
+            />
+          </label>
+        }
+        @if (isConductionScenario()) {
+          <label class="thermo-field">
+            <span>Time (s)</span>
+            <input
+              type="range"
+              min="0"
+              [max]="selectedScenario().durationSeconds"
+              step="1"
+              [value]="currentTimeSeconds()"
+              (input)="updateTimeSeconds($event)"
+            />
+          </label>
+          <p>
+            Current time: <strong>{{ currentTimeSeconds().toFixed(0) }} s</strong> of
+            {{ selectedScenario().durationSeconds }} s
+          </p>
+          <label class="thermo-field">
+            <span>Slab thickness (m)</span>
+            <input
+              type="number"
+              step="0.005"
+              [value]="metrics().slabThicknessMeters"
+              (input)="updateScenarioParameter('slabThicknessMeters', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Thermal conductivity (W/m*K)</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="metrics().thermalConductivityWPerMK"
+              (input)="updateScenarioParameter('thermalConductivityWPerMK', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Thermal diffusivity (m^2/s)</span>
+            <input
+              type="number"
+              step="0.0000001"
+              [value]="metrics().thermalDiffusivityM2PerS"
+              (input)="updateScenarioParameter('thermalDiffusivityM2PerS', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Initial temperature (degC)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().initialTemperatureCelsius"
+              (input)="updateScenarioParameter('initialTemperatureCelsius', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Boundary temperature (degC)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().boundaryTemperatureCelsius"
+              (input)="updateScenarioParameter('boundaryTemperatureCelsius', $event)"
+            />
+          </label>
+        }
+        @if (isCarnotScenario()) {
+          <label class="thermo-field">
+            <span>Time (s)</span>
+            <input
+              type="range"
+              min="0"
+              [max]="selectedScenario().durationSeconds"
+              step="1"
+              [value]="currentTimeSeconds()"
+              (input)="updateTimeSeconds($event)"
+            />
+          </label>
+          <p>
+            Current time: <strong>{{ currentTimeSeconds().toFixed(0) }} s</strong> of
+            {{ selectedScenario().durationSeconds }} s
+          </p>
+          <label class="thermo-field">
+            <span>Working gas amount (mol)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().amountMoles"
+              (input)="updateScenarioParameter('amountMoles', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Hot reservoir (K)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().hotReservoirTemperatureKelvin"
+              (input)="updateScenarioParameter('hotReservoirTemperatureKelvin', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Cold reservoir (K)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().coldReservoirTemperatureKelvin"
+              (input)="updateScenarioParameter('coldReservoirTemperatureKelvin', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Minimum volume (m^3)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().cycleMinVolumeCubicMeters"
+              (input)="updateScenarioParameter('cycleMinVolumeCubicMeters', $event)"
+            />
+          </label>
+          <label class="thermo-field">
+            <span>Isothermal volume ratio</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="metrics().cycleVolumeRatio"
+              (input)="updateScenarioParameter('cycleVolumeRatio', $event)"
+            />
+          </label>
+        }
+      </div>
+      <p class="thermo-card__note">
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </article>
+
+    <article class="thermo-card thermo-card--insights">
+      <h3>Insight Cards</h3>
+      <div class="thermo-insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="thermo-insight">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+      <p>{{ residualSummary() }}</p>
+    </article>
+
+    <article class="thermo-card thermo-card--workflow">
+      <h3>Export and Restore</h3>
+      <div class="thermo-actions">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="downloadReportCsv()">Download CSV</button>
+      </div>
+      <label class="thermo-field">
+        <span>Import JSON</span>
+        <textarea
+          rows="10"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <div class="thermo-actions">
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+        <label class="thermo-upload">
+          <span>Load file</span>
+          <input
+            type="file"
+            accept="application/json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+      </div>
+      <p>{{ exportMessage() }}</p>
+      <pre>{{ exportPreview() }}</pre>
+    </article>
+  </div>
+</section>

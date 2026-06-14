@@ -1,0 +1,311 @@
+<section class="statics-page">
+  <div class="statics-page__hero">
+    <p class="statics-page__eyebrow">Phase 5</p>
+    <h2>Statics with Angular and WebGPU</h2>
+    <p class="statics-page__summary">
+      This phase focuses on equilibrium, support reactions, and force-balance diagrams. The Angular
+      Statics surface now covers beam support, inclined-plane equilibrium, and pulley balance with
+      shared payload, analytics, and WebGPU viewport paths. Phase 5 is complete for the
+      Angular/WebGPU scope.
+    </p>
+  </div>
+
+  <div class="statics-page__grid">
+    <article class="statics-card statics-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        Solver-backed scenarios, payload round-tripping, insight cards, and WebGPU viewports are
+        active across the completed Statics Phase 5 slice.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >.
+        {{ residualSummary() }}
+      </p>
+      <p>Next milestone: <strong>Phase 6 Statics Vulkan parity</strong>.</p>
+      <label class="statics-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="statics-card statics-card--scenarios">
+      <h3>Initial Scenario Set</h3>
+      <div class="statics-scenarios">
+        @for (scenario of scenarioPreviews; track scenario.id) {
+          <section class="statics-scenario">
+            <div class="statics-scenario__header">
+              <h4>{{ scenario.name }}</h4>
+              <span>{{ scenario.status }}</span>
+            </div>
+            <p>{{ scenario.focusArea }}</p>
+            <p>{{ scenario.equationSummary }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="statics-card statics-card--viewport">
+      <div class="statics-viewport__header">
+        <h3>{{ viewportTitle() }}</h3>
+        <p>{{ webGpuMessage() }}</p>
+      </div>
+      <canvas
+        #viewport
+        class="statics-viewport"
+        [class.statics-viewport--inactive]="!webGpuReady()"
+      ></canvas>
+      <div class="statics-actions statics-actions--overlay" aria-label="Statics overlay toggles">
+        <button type="button" (click)="toggleOverlay('showAppliedForce')">
+          Applied force {{ overlays().showAppliedForce ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showReactionForces')">
+          Reactions {{ overlays().showReactionForces ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showResidualGuides')">
+          Residual guides {{ overlays().showResidualGuides ? "on" : "off" }}
+        </button>
+      </div>
+      <p class="statics-viewport__hint">
+        {{ viewportHint() }}
+      </p>
+    </article>
+
+    @if (beamSupportActive()) {
+      <article class="statics-card statics-card--controls">
+        <h3>Beam Controls</h3>
+        <div class="statics-fields">
+          <label class="statics-field">
+            <span>Left support x (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="beamMetrics().leftSupportX"
+              (input)="updateScenarioParameter('anchorPoint.x', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Right support x (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="beamMetrics().rightSupportX"
+              (input)="updateScenarioParameter('secondaryPoint.x', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Load position x (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="beamMetrics().loadPosition"
+              (input)="updateScenarioParameter('loadPosition', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Load magnitude (N)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="beamMetrics().loadMagnitude"
+              (input)="updateScenarioParameter('loadMagnitude', $event)"
+            />
+          </label>
+        </div>
+      </article>
+
+      <article class="statics-card statics-card--results">
+        <h3>Beam Reactions</h3>
+        <div class="statics-results">
+          <p>
+            Left support reaction: <strong>{{ beamMetrics().leftReaction.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Right support reaction: <strong>{{ beamMetrics().rightReaction.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Applied load: <strong>{{ beamMetrics().loadMagnitude.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Equilibrium state: <strong>{{ currentState().stable ? "stable" : "unstable" }}</strong>
+          </p>
+        </div>
+      </article>
+    } @else if (inclinedPlaneActive()) {
+      <article class="statics-card statics-card--controls">
+        <h3>Inclined Plane Controls</h3>
+        <div class="statics-fields">
+          <label class="statics-field">
+            <span>Mass (kg)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="inclinedPlaneMetrics().mass"
+              (input)="updateScenarioParameter('mass', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Plane angle (deg)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="inclinedPlaneMetrics().angleDegrees"
+              (input)="updateScenarioParameter('angleDegrees', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Friction coefficient</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="inclinedPlaneMetrics().frictionCoefficient"
+              (input)="updateScenarioParameter('frictionCoefficient', $event)"
+            />
+          </label>
+        </div>
+      </article>
+
+      <article class="statics-card statics-card--results">
+        <h3>Inclined Plane Readouts</h3>
+        <div class="statics-results">
+          <p>
+            Weight: <strong>{{ inclinedPlaneMetrics().weight.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Normal force: <strong>{{ inclinedPlaneMetrics().normalForce.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Friction force: <strong>{{ inclinedPlaneMetrics().frictionForce.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Equilibrium state: <strong>{{ currentState().stable ? "stable" : "unstable" }}</strong>
+          </p>
+        </div>
+      </article>
+    } @else if (pulleyActive()) {
+      <article class="statics-card statics-card--controls">
+        <h3>Pulley Controls</h3>
+        <div class="statics-fields">
+          <label class="statics-field">
+            <span>Left load mass (kg)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="pulleyMetrics().leftMass"
+              (input)="updateScenarioParameter('mass', $event)"
+            />
+          </label>
+          <label class="statics-field">
+            <span>Right load mass (kg)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="pulleyMetrics().rightMass"
+              (input)="updateScenarioParameter('secondaryMass', $event)"
+            />
+          </label>
+        </div>
+      </article>
+
+      <article class="statics-card statics-card--results">
+        <h3>Pulley Readouts</h3>
+        <div class="statics-results">
+          <p>
+            Left tension: <strong>{{ pulleyMetrics().leftTension.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Right tension: <strong>{{ pulleyMetrics().rightTension.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Total suspended load: <strong>{{ pulleyMetrics().totalLoad.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Imbalance: <strong>{{ pulleyMetrics().imbalance.toFixed(2) }} N</strong>
+          </p>
+          <p>
+            Equilibrium state: <strong>{{ currentState().stable ? "stable" : "unstable" }}</strong>
+          </p>
+        </div>
+      </article>
+    } @else {
+      <article class="statics-card statics-card--next">
+        <h3>Scenario Notes</h3>
+        <p>
+          Parameter editing and dedicated viewport guides are still beam-specific, but the active
+          statics scenario now shares the same insight cards and JSON payload round-trip surface.
+        </p>
+      </article>
+    }
+
+    <article class="statics-card statics-card--insights">
+      <h3>Statics Insights</h3>
+      <div class="statics-insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="statics-insight">
+            <h4>{{ card.label }}</h4>
+            <p class="statics-insight__value">{{ card.value }}</p>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="statics-card statics-card--export">
+      <div class="statics-card__header">
+        <div>
+          <h3>Export and Restore</h3>
+          <p>Round-trip the active statics scenario with the shared JSON payload shape.</p>
+
+          @if (beamSupportActive()) {
+            <p>
+              Beam payloads use <strong>loadPosition</strong> and <strong>loadMagnitude</strong>.
+            </p>
+          } @else if (inclinedPlaneActive()) {
+            <p>
+              Inclined-plane payloads use <strong>mass</strong>, <strong>angleDegrees</strong>, and
+              <strong>frictionCoefficient</strong>.
+            </p>
+          } @else if (pulleyActive()) {
+            <p>
+              Pulley payloads use <strong>mass</strong> for the left load and
+              <strong>secondaryMass</strong> for the right load.
+            </p>
+          }
+        </div>
+        <div class="statics-actions">
+          <button type="button" (click)="downloadScenarioState()">Export JSON</button>
+          <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        </div>
+      </div>
+
+      <label class="statics-field">
+        <span>Restore from exported JSON</span>
+        <textarea
+          class="statics-textarea"
+          [value]="importPayloadText()"
+          rows="8"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+
+      <div class="statics-actions statics-actions--import">
+        <input
+          accept="application/json"
+          type="file"
+          (change)="importScenarioStateFromFile($event)"
+        />
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+      </div>
+
+      @if (exportMessage()) {
+        <p class="statics-export-message">{{ exportMessage() }}</p>
+      }
+
+      <pre>{{ exportPreview() }}</pre>
+    </article>
+  </div>
+</section>

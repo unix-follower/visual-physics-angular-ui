@@ -1,0 +1,994 @@
+<section class="electronics-page">
+  <div class="electronics-page__hero">
+    <p class="electronics-page__eyebrow">Phase 11</p>
+    <h2>Electronics and Circuits with Angular and WebGPU</h2>
+    <p class="electronics-page__summary">
+      Phase 11 now spans RC and RL transients, half-wave, full-wave, and smoothed rectification, RC
+      and RL low/high-pass filters, divider, step-response, and resonance-sweep circuit studies with
+      shared analytics, export workflows, and WebGPU-backed visualization.
+    </p>
+  </div>
+
+  <div class="electronics-page__grid">
+    <article class="electronics-card electronics-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        Phase 11 has started with a dedicated Angular route, feature shell, state service, payload
+        helpers, analytics, renderer, and focused test coverage for the RC transient slice.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. Output voltage {{ currentState().outputVoltage.toFixed(2) }} V, current
+        {{ currentState().current.toFixed(4) }} A.
+      </p>
+      <p>Completion status: <strong>Phase 11 scenario platform in progress</strong>.</p>
+      <label class="electronics-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+
+      @if (showTimeControl()) {
+        <label class="electronics-field">
+          <span>{{ timeControlLabel() }}</span>
+          <input
+            type="range"
+            min="0"
+            [max]="selectedScenario().durationSeconds"
+            [step]="timeControlStep()"
+            [value]="currentTimeSeconds()"
+            (input)="updateTimeSeconds($event)"
+          />
+          <strong>{{ timeControlValue() }} {{ timeControlUnit() }}</strong>
+        </label>
+      }
+    </article>
+
+    <article class="electronics-card electronics-card--scenario">
+      <h3>Phase 11 Scenario Set</h3>
+      @for (scenario of scenarioPreviews; track scenario.id) {
+        <section class="electronics-scenario">
+          <div class="electronics-scenario__header">
+            <h4>{{ scenario.name }}</h4>
+            <span>{{ scenario.status }}</span>
+          </div>
+          <p>{{ scenario.focusArea }}</p>
+          <p>{{ scenario.equationSummary }}</p>
+        </section>
+      }
+    </article>
+
+    <article class="electronics-card electronics-card--viewport">
+      <h3>Viewport</h3>
+      <div class="electronics-viewport">
+        <canvas #viewport class="electronics-viewport__canvas"></canvas>
+        <p>{{ viewportHint() }}</p>
+      </div>
+      <div class="electronics-actions" aria-label="Electronics and Circuits overlay toggles">
+        <button type="button" (click)="toggleOverlay('showVoltageTrace')">
+          Voltage trace {{ overlays().showVoltageTrace ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showCurrentTrace')">
+          Current trace {{ overlays().showCurrentTrace ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showChargeTrace')">
+          Charge trace {{ overlays().showChargeTrace ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showEnergyMarkers')">
+          Energy markers {{ overlays().showEnergyMarkers ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="electronics-card electronics-card--controls">
+      @if (rcTransientActive()) {
+        <h3>RC Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Capacitance (F)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Initial charge (C)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().initialCharge"
+              (input)="updateScenarioParameter('initialCharge', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rlTransientActive()) {
+        <h3>RL Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Inductance (H)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().inductance"
+              (input)="updateScenarioParameter('inductance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (halfWaveRectifierActive()) {
+        <h3>Half-Wave Rectifier Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source amplitude (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Load resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (fullWaveRectifierActive()) {
+        <h3>Full-Wave Rectifier Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source amplitude (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Load resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (smoothedRectifierActive()) {
+        <h3>Smoothed Rectifier Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source amplitude (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Load resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Smoothing capacitance (F)</span>
+            <input
+              type="number"
+              step="0.00001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rcLowPassActive()) {
+        <h3>RC Low-Pass Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Capacitance (F)</span>
+            <input
+              type="number"
+              step="0.0001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rcHighPassActive()) {
+        <h3>RC High-Pass Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Capacitance (F)</span>
+            <input
+              type="number"
+              step="0.0001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rlLowPassActive()) {
+        <h3>RL Low-Pass Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Inductance (H)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().inductance"
+              (input)="updateScenarioParameter('inductance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rlHighPassActive()) {
+        <h3>RL High-Pass Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Inductance (H)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().inductance"
+              (input)="updateScenarioParameter('inductance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (resistorNetworkActive()) {
+        <h3>Resistor Network Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Upper resistor (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Lower resistor (Ω)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().secondaryResistance"
+              (input)="updateScenarioParameter('secondaryResistance', $event)"
+            />
+          </label>
+        </div>
+      } @else if (rlcResponseActive()) {
+        <h3>RLC Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Inductance (H)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().inductance"
+              (input)="updateScenarioParameter('inductance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Capacitance (F)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+        </div>
+      } @else {
+        <h3>RLC Resonance Controls</h3>
+        <div class="electronics-fields">
+          <label class="electronics-field">
+            <span>Source voltage (V)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().sourceVoltage"
+              (input)="updateScenarioParameter('sourceVoltage', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Resistance (Ω)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().resistance"
+              (input)="updateScenarioParameter('resistance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Inductance (H)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().inductance"
+              (input)="updateScenarioParameter('inductance', $event)"
+            />
+          </label>
+          <label class="electronics-field">
+            <span>Capacitance (F)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().capacitance"
+              (input)="updateScenarioParameter('capacitance', $event)"
+            />
+          </label>
+        </div>
+      }
+    </article>
+
+    <article class="electronics-card electronics-card--readouts">
+      @if (rcTransientActive()) {
+        <h3>RC Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Capacitor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Charge: <strong>{{ currentState().charge.toFixed(4) }} C</strong>
+          </p>
+          <p>
+            Stored energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Resistor drop: <strong>{{ currentState().resistorVoltageDrop.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Time constant: <strong>{{ currentState().timeConstant.toFixed(3) }} s</strong>
+          </p>
+        </div>
+      } @else if (rlTransientActive()) {
+        <h3>RL Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Inductor voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Flux linkage: <strong>{{ currentState().charge.toFixed(4) }} Wb-turn</strong>
+          </p>
+          <p>
+            Magnetic energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Resistor drop: <strong>{{ currentState().resistorVoltageDrop.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Time constant: <strong>{{ currentState().timeConstant.toFixed(3) }} s</strong>
+          </p>
+        </div>
+      } @else if (halfWaveRectifierActive()) {
+        <h3>Half-Wave Rectifier Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Input voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Rectified output: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Load current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Conduction state:
+            <strong>{{ currentState().charge > 0 ? "Conducting" : "Blocked" }}</strong>
+          </p>
+          <p>
+            Load power: <strong>{{ currentState().branchPower.toFixed(4) }} W</strong>
+          </p>
+          <p>
+            Cycle period: <strong>{{ currentState().timeConstant.toFixed(3) }} s</strong>
+          </p>
+        </div>
+      } @else if (fullWaveRectifierActive()) {
+        <h3>Full-Wave Rectifier Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Source voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Rectified output: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Load current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Bridge conduction:
+            <strong>{{ currentState().charge > 0 ? "Conducting" : "Blocked" }}</strong>
+          </p>
+          <p>
+            Load power: <strong>{{ currentState().branchPower.toFixed(4) }} W</strong>
+          </p>
+          <p>
+            Ripple period: <strong>{{ currentState().timeConstant.toFixed(3) }} s</strong>
+          </p>
+        </div>
+      } @else if (smoothedRectifierActive()) {
+        <h3>Smoothed Rectifier Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Source voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Smoothed output: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Load current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Capacitor charge: <strong>{{ currentState().charge.toFixed(6) }} C</strong>
+          </p>
+          <p>
+            Stored energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Ripple sag: <strong>{{ currentState().steadyStateError.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            RC time constant: <strong>{{ currentState().timeConstant.toFixed(4) }} s</strong>
+          </p>
+        </div>
+      } @else if (rcLowPassActive()) {
+        <h3>RC Low-Pass Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Sweep frequency: <strong>{{ currentState().timeSeconds.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Output voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Stored energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Cutoff frequency: <strong>{{ currentState().timeConstant.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Phase lag: <strong>{{ lowPassPhaseLagDegrees().toFixed(1) }}°</strong>
+          </p>
+          <p>
+            Gain: <strong>{{ lowPassGain().toFixed(3) }}</strong>
+          </p>
+        </div>
+      } @else if (rcHighPassActive()) {
+        <h3>RC High-Pass Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Sweep frequency: <strong>{{ currentState().timeSeconds.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Output voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Capacitor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Dissipated power: <strong>{{ currentState().branchPower.toFixed(4) }} W</strong>
+          </p>
+          <p>
+            Cutoff frequency: <strong>{{ currentState().timeConstant.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Phase lead: <strong>{{ highPassPhaseLeadDegrees().toFixed(1) }}°</strong>
+          </p>
+          <p>
+            Gain: <strong>{{ highPassGain().toFixed(3) }}</strong>
+          </p>
+        </div>
+      } @else if (rlLowPassActive()) {
+        <h3>RL Low-Pass Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Sweep frequency: <strong>{{ currentState().timeSeconds.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Output voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Inductor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Magnetic energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Cutoff frequency: <strong>{{ currentState().timeConstant.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Phase lag: <strong>{{ rlLowPassPhaseLagDegrees().toFixed(1) }}°</strong>
+          </p>
+          <p>
+            Gain: <strong>{{ rlLowPassGain().toFixed(3) }}</strong>
+          </p>
+        </div>
+      } @else if (rlHighPassActive()) {
+        <h3>RL High-Pass Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Sweep frequency: <strong>{{ currentState().timeSeconds.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Output voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Resistor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Magnetic energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Cutoff frequency: <strong>{{ currentState().timeConstant.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Phase lead: <strong>{{ rlHighPassPhaseLeadDegrees().toFixed(1) }}°</strong>
+          </p>
+          <p>
+            Gain: <strong>{{ rlHighPassGain().toFixed(3) }}</strong>
+          </p>
+        </div>
+      } @else if (resistorNetworkActive()) {
+        <h3>Resistor Network Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Output voltage: <strong>{{ currentState().outputVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Branch current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Equivalent resistance:
+            <strong>{{ currentState().equivalentResistance.toFixed(1) }} Ω</strong>
+          </p>
+          <p>
+            Upper drop: <strong>{{ currentState().resistorVoltageDrop.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Load power: <strong>{{ currentState().branchPower.toFixed(4) }} W</strong>
+          </p>
+        </div>
+      } @else if (rlcResponseActive()) {
+        <h3>RLC Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Capacitor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Circuit current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Charge: <strong>{{ currentState().charge.toFixed(4) }} C</strong>
+          </p>
+          <p>
+            Stored energy: <strong>{{ currentState().storedEnergy.toFixed(4) }} J</strong>
+          </p>
+          <p>
+            Resistor drop: <strong>{{ currentState().resistorVoltageDrop.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Damping timescale: <strong>{{ currentState().timeConstant.toFixed(3) }} s</strong>
+          </p>
+        </div>
+      } @else {
+        <h3>RLC Resonance Readouts</h3>
+        <div class="electronics-results">
+          <p>
+            Sweep frequency: <strong>{{ currentState().timeSeconds.toFixed(2) }} Hz</strong>
+          </p>
+          <p>
+            Capacitor voltage: <strong>{{ currentState().capacitorVoltage.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Sweep current: <strong>{{ currentState().current.toFixed(4) }} A</strong>
+          </p>
+          <p>
+            Dissipated power: <strong>{{ currentState().branchPower.toFixed(4) }} W</strong>
+          </p>
+          <p>
+            Resistor drop: <strong>{{ currentState().resistorVoltageDrop.toFixed(2) }} V</strong>
+          </p>
+          <p>
+            Bandwidth: <strong>{{ currentState().timeConstant.toFixed(3) }} Hz</strong>
+          </p>
+        </div>
+      }
+    </article>
+
+    <article class="electronics-card electronics-card--insights">
+      <h3>Scenario Summary</h3>
+      <div class="electronics-summary">
+        @for (row of reportSummaryRows(); track row.metric) {
+          <section class="electronics-summary__item">
+            <h4>{{ row.label }}</h4>
+            <p>
+              <strong>{{ row.displayValue }}</strong>
+            </p>
+            <p>{{ row.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="electronics-card electronics-card--insights">
+      <h3>Insight Cards</h3>
+      <div class="electronics-insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="electronics-insight">
+            <h4>{{ card.label }}</h4>
+            <p>
+              <strong>{{ card.value }}</strong>
+            </p>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="electronics-card electronics-card--plots">
+      <h3>Scenario Plots</h3>
+      <div class="electronics-actions">
+        <button type="button" (click)="downloadScenarioReport()">Download CSV</button>
+      </div>
+      <div class="electronics-plots">
+        <figure>
+          <figcaption>{{ primaryPlotLabel() }}</figcaption>
+          <svg
+            viewBox="0 0 320 120"
+            aria-label="Capacitor voltage plot"
+            tabindex="0"
+            (focus)="focusPlotReadout()"
+            (blur)="clearHoveredSample()"
+            (keydown)="handlePlotKeydown($event)"
+            (mousemove)="updateHoveredSample($event)"
+            (mouseleave)="clearHoveredSample()"
+          >
+            @for (guide of plotGuides().primary; track guide.label) {
+              <path class="electronics-plots__guide" [attr.d]="guide.path" />
+            }
+            @if (hoveredCursorPath()) {
+              <path class="electronics-plots__cursor" [attr.d]="hoveredCursorPath()" />
+            }
+            <path [attr.d]="voltagePath()" />
+          </svg>
+          <div class="electronics-plot-guides">
+            @for (guide of plotGuides().primary; track guide.label) {
+              <span>{{ guide.label }}</span>
+            }
+          </div>
+        </figure>
+        <figure>
+          <figcaption>{{ secondaryPlotLabel() }}</figcaption>
+          <svg
+            viewBox="0 0 320 120"
+            aria-label="Current plot"
+            tabindex="0"
+            (focus)="focusPlotReadout()"
+            (blur)="clearHoveredSample()"
+            (keydown)="handlePlotKeydown($event)"
+            (mousemove)="updateHoveredSample($event)"
+            (mouseleave)="clearHoveredSample()"
+          >
+            @for (guide of plotGuides().secondary; track guide.label) {
+              <path class="electronics-plots__guide" [attr.d]="guide.path" />
+            }
+            @if (hoveredCursorPath()) {
+              <path class="electronics-plots__cursor" [attr.d]="hoveredCursorPath()" />
+            }
+            <path [attr.d]="currentPath()" />
+          </svg>
+          <div class="electronics-plot-guides">
+            @for (guide of plotGuides().secondary; track guide.label) {
+              <span>{{ guide.label }}</span>
+            }
+          </div>
+        </figure>
+        <figure>
+          <figcaption>{{ tertiaryPlotLabel() }}</figcaption>
+          <svg
+            viewBox="0 0 320 120"
+            aria-label="Charge plot"
+            tabindex="0"
+            (focus)="focusPlotReadout()"
+            (blur)="clearHoveredSample()"
+            (keydown)="handlePlotKeydown($event)"
+            (mousemove)="updateHoveredSample($event)"
+            (mouseleave)="clearHoveredSample()"
+          >
+            @for (guide of plotGuides().tertiary; track guide.label) {
+              <path class="electronics-plots__guide" [attr.d]="guide.path" />
+            }
+            @if (hoveredCursorPath()) {
+              <path class="electronics-plots__cursor" [attr.d]="hoveredCursorPath()" />
+            }
+            <path [attr.d]="tertiaryPath()" />
+          </svg>
+          <div class="electronics-plot-guides">
+            @for (guide of plotGuides().tertiary; track guide.label) {
+              <span>{{ guide.label }}</span>
+            }
+          </div>
+        </figure>
+      </div>
+      <div class="electronics-plot-readout">
+        <div class="electronics-sr-only" aria-live="polite">{{ hoveredSampleAnnouncement() }}</div>
+        <p>
+          <strong>{{ hoveredSampleLabel() }}</strong>
+        </p>
+        <div class="electronics-plot-controls" aria-label="Plot sample navigation controls">
+          <button
+            type="button"
+            (click)="selectFirstSample()"
+            [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+          >
+            First sample
+          </button>
+          <button
+            type="button"
+            (click)="stepHoveredSample(-1)"
+            [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+          >
+            Previous sample
+          </button>
+          <button
+            type="button"
+            (click)="stepHoveredSample(1)"
+            [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+          >
+            Next sample
+          </button>
+          <button
+            type="button"
+            (click)="selectLastSample()"
+            [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+          >
+            Last sample
+          </button>
+        </div>
+        @if (plotReadoutRows().length > 0) {
+          <div class="electronics-plot-readout__rows">
+            @for (row of plotReadoutRows(); track row.label) {
+              <span>{{ row.label }}: {{ row.value }}</span>
+            }
+          </div>
+        }
+      </div>
+      <p>
+        @if (resistorNetworkActive()) {
+          Resistor-network CSV exports preserve divider output voltage, branch current, equivalent
+          resistance, upper-drop, and load-power samples.
+        } @else if (halfWaveRectifierActive()) {
+          Half-wave rectifier CSV exports preserve sampled source voltage, rectified output voltage,
+          load current, conduction state, load power, and cycle metadata.
+        } @else if (fullWaveRectifierActive()) {
+          Full-wave rectifier CSV exports preserve sampled source voltage, bridge-rectified output
+          voltage, load current, instantaneous load power, ripple-period metadata, and summary
+          metrics for average and RMS output.
+        } @else if (smoothedRectifierActive()) {
+          Smoothed rectifier CSV exports preserve sampled source voltage, reservoir-capacitor output
+          voltage, load current, capacitor charge, stored energy, and ripple summary metadata.
+        } @else if (rlTransientActive()) {
+          RL transient CSV exports preserve sampled inductor voltage, branch current, flux linkage,
+          magnetic energy, resistor drop, and time-constant context.
+        } @else if (rcLowPassActive()) {
+          RC low-pass CSV exports preserve sweep frequency, output voltage, branch current, stored
+          energy, resistor drop, gain, phase lag, and cutoff-frequency context.
+        } @else if (rcHighPassActive()) {
+          RC high-pass CSV exports preserve sweep frequency, resistor-output voltage, branch
+          current, capacitor voltage, dissipated power, phase lead, and cutoff-frequency context.
+        } @else if (rlLowPassActive()) {
+          RL low-pass CSV exports preserve sweep frequency, resistor-output voltage, branch current,
+          inductor voltage, magnetic energy, phase lag, and cutoff-frequency context.
+        } @else if (rlHighPassActive()) {
+          RL high-pass CSV exports preserve sweep frequency, inductor-output voltage, branch
+          current, resistor voltage, magnetic energy, phase lead, and cutoff-frequency context.
+        } @else if (rlcResonanceActive()) {
+          RLC resonance CSV exports preserve sweep frequency, capacitor gain, current, stored
+          energy, resistor drop, dissipated power, and resonance-summary metadata.
+        } @else if (rlcResponseActive()) {
+          RLC CSV exports preserve sampled capacitor voltage, current, charge, stored energy,
+          resistor drop, and damping-timescale context.
+        } @else {
+          RC CSV exports preserve sampled capacitor voltage, current, charge, stored energy,
+          resistor drop, and time-constant context.
+        }
+      </p>
+    </article>
+
+    <article class="electronics-card electronics-card--payload">
+      <h3>JSON Round Trip</h3>
+      <div class="electronics-actions">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+        <label class="electronics-actions__file-button">
+          <span>Import JSON File</span>
+          <input
+            type="file"
+            accept="application/json,.json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+      </div>
+      <p class="electronics-message">{{ exportMessage() }}</p>
+      <label class="electronics-field electronics-field--textarea">
+        <span>Import payload</span>
+        <textarea
+          rows="8"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <pre>{{ exportPreview() }}</pre>
+      <p>
+        Phase 11 payloads use the same shared scenario, snapshot, overlay, and sampled-state export
+        pattern as the completed Angular physics domains.
+      </p>
+    </article>
+  </div>
+</section>

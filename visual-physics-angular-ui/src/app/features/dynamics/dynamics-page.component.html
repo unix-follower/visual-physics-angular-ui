@@ -1,0 +1,343 @@
+<section class="dynamics-page">
+  <article class="dynamics-panel dynamics-panel--hero">
+    <p class="dynamics-panel__eyebrow">Phase 3</p>
+    <h2>Dynamics</h2>
+    <p class="dynamics-panel__text">
+      The first Dynamics slice is now live with a renderer-agnostic RK4 state core for force, drag,
+      orbit, spring, and elastic collision scenarios.
+    </p>
+
+    <div class="dynamics-controls">
+      <label class="dynamics-field">
+        <span>Preset</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of state.scenarios; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="dynamics-field dynamics-field--wide">
+        <span>Time {{ state.timeSeconds().toFixed(2) }} s</span>
+        <input
+          [max]="maxTimeSeconds()"
+          [value]="state.timeSeconds()"
+          min="0"
+          step="0.01"
+          type="range"
+          (input)="updateTime($event)"
+        />
+      </label>
+
+      <div class="dynamics-controls__row" aria-label="Playback controls">
+        <button type="button" (click)="togglePlayback()">
+          {{ state.isPlaying() ? "Pause" : "Play" }}
+        </button>
+        <button type="button" (click)="stepForward()">Step +0.10s</button>
+        <button type="button" class="button--ghost" (click)="reset()">Reset</button>
+      </div>
+    </div>
+  </article>
+
+  <div class="dynamics-grid">
+    <article class="dynamics-panel dynamics-panel--viewport">
+      <div class="dynamics-panel__header">
+        <div>
+          <h3>WebGPU viewport</h3>
+          <p class="dynamics-panel__text dynamics-panel__text--compact">
+            {{ webGpuReady() ? "Ready" : "Pending" }}
+          </p>
+        </div>
+      </div>
+
+      <canvas
+        #viewport
+        class="dynamics-viewport__canvas"
+        aria-label="WebGPU dynamics viewport"
+      ></canvas>
+
+      <div class="dynamics-controls__row" aria-label="Dynamics overlay toggles">
+        <button type="button" class="button--ghost" (click)="toggleOverlay('showMomentumVector')">
+          Momentum {{ overlays().showMomentumVector ? "on" : "off" }}
+        </button>
+        <button type="button" class="button--ghost" (click)="toggleOverlay('showVelocityVector')">
+          Velocity {{ overlays().showVelocityVector ? "on" : "off" }}
+        </button>
+        <button type="button" class="button--ghost" (click)="toggleOverlay('showForceVector')">
+          Force {{ overlays().showForceVector ? "on" : "off" }}
+        </button>
+        <button type="button" class="button--ghost" (click)="toggleOverlay('showScenarioGuides')">
+          Guides {{ overlays().showScenarioGuides ? "on" : "off" }}
+        </button>
+      </div>
+
+      <div class="dynamics-controls__row" aria-label="Dynamics overlay legend">
+        @for (item of overlayLegendItems(); track item.label) {
+          <div
+            [style.align-items]="'center'"
+            [style.display]="'inline-flex'"
+            [style.gap]="'0.45rem'"
+            [style.opacity]="item.active ? '1' : '0.45'"
+          >
+            <span
+              [style.background]="item.color"
+              [style.border-radius]="'999px'"
+              [style.display]="'inline-block'"
+              [style.height]="'0.8rem'"
+              [style.width]="'0.8rem'"
+            ></span>
+            <span>{{ item.label }}</span>
+          </div>
+        }
+      </div>
+      @if (viewportGuideLabels().length > 0) {
+        <div class="dynamics-controls__row" aria-label="Viewport guide labels">
+          @for (guide of viewportGuideLabels(); track guide.label) {
+            <div class="dynamics-panel__text dynamics-panel__text--compact" [style.margin]="'0'">
+              <strong>{{ guide.label }}:</strong> {{ guide.detail }}
+            </div>
+          }
+        </div>
+      }
+      <p class="dynamics-panel__text dynamics-panel__text--compact">
+        Viewport bounds: {{ viewportBoundsLabel() }}
+      </p>
+
+      <p class="dynamics-panel__text dynamics-panel__text--compact">{{ webGpuMessage() }}</p>
+      <p class="dynamics-panel__text dynamics-panel__text--compact">
+        The viewport renders axes, the sampled trajectory, the active body marker, momentum,
+        velocity, and net-force vectors, plus scenario guides such as spring anchors, orbital
+        centers, and collision bounds.
+      </p>
+    </article>
+
+    <article class="dynamics-panel">
+      <h3>Scenario</h3>
+      <p class="dynamics-panel__text dynamics-panel__text--compact">
+        {{ selectedScenario().summary }}
+      </p>
+
+      <dl class="dynamics-readouts dynamics-readouts--summary">
+        <div>
+          <dt>Duration</dt>
+          <dd>{{ selectedScenario().durationSeconds }} s</dd>
+        </div>
+        <div>
+          <dt>Mass</dt>
+          <dd>{{ selectedScenario().mass }} kg</dd>
+        </div>
+        <div>
+          <dt>Bounds</dt>
+          <dd>{{ viewportBoundsLabel() }}</dd>
+        </div>
+        <div>
+          <dt>Equation</dt>
+          <dd>{{ selectedScenario().equationSummary }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="dynamics-panel">
+      <h3>Current state</h3>
+      <dl class="dynamics-readouts">
+        <div>
+          <dt>Position</dt>
+          <dd>
+            ({{ currentState().position.x.toFixed(2) }}, {{ currentState().position.y.toFixed(2) }})
+            m
+          </dd>
+        </div>
+        <div>
+          <dt>Velocity</dt>
+          <dd>
+            ({{ currentState().velocity.x.toFixed(2) }}, {{ currentState().velocity.y.toFixed(2) }})
+            m/s
+          </dd>
+        </div>
+        <div>
+          <dt>Net force</dt>
+          <dd>
+            ({{ currentState().netForce.x.toFixed(2) }}, {{ currentState().netForce.y.toFixed(2) }})
+            N
+          </dd>
+        </div>
+        <div>
+          <dt>Total energy</dt>
+          <dd>{{ currentState().totalEnergy.toFixed(2) }} J</dd>
+        </div>
+        <div>
+          <dt>Momentum</dt>
+          <dd>
+            ({{ currentState().momentum.x.toFixed(2) }}, {{ currentState().momentum.y.toFixed(2) }})
+            kg·m/s
+          </dd>
+        </div>
+        <div>
+          <dt>Energy drift</dt>
+          <dd>{{ energyDrift().toFixed(3) }} J across sampled states</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="dynamics-panel">
+      <h3>Interpretation cues</h3>
+      <div class="dynamics-insights-grid" aria-label="Dynamics insight cards">
+        @for (card of insightCards(); track card.label) {
+          <article class="dynamics-insight-card">
+            <span class="dynamics-panel__eyebrow">{{ card.label }}</span>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </article>
+        }
+      </div>
+    </article>
+  </div>
+
+  <article class="dynamics-panel">
+    <div class="dynamics-panel__header">
+      <div>
+        <h3>Editable parameters</h3>
+        <p class="dynamics-panel__text dynamics-panel__text--compact">
+          Adjust the active dynamics scenario and reuse the same RK4 evaluator.
+        </p>
+      </div>
+
+      <button type="button" class="button--ghost" (click)="resetScenarioParameters()">
+        Reset parameters
+      </button>
+    </div>
+
+    <div class="dynamics-parameter-sections">
+      @for (section of parameterSections(); track section.heading) {
+        <section class="dynamics-parameter-section">
+          <h4>{{ section.heading }}</h4>
+
+          <div class="dynamics-parameter-grid">
+            @for (field of section.fields; track field.field) {
+              <label class="dynamics-field">
+                <span>{{ field.label }}</span>
+                <input
+                  [step]="field.step"
+                  [value]="field.value"
+                  type="number"
+                  (input)="updateScenarioParameter(field.field, $event)"
+                />
+              </label>
+            }
+          </div>
+        </section>
+      }
+    </div>
+  </article>
+
+  <article class="dynamics-panel">
+    <div class="dynamics-panel__header">
+      <div>
+        <h3>Export and restore</h3>
+        <p class="dynamics-panel__text dynamics-panel__text--compact">
+          Save the active Dynamics scenario as JSON and restore it later with the same payload
+          shape.
+        </p>
+      </div>
+
+      <div class="dynamics-controls__row">
+        <button type="button" class="button--ghost" (click)="downloadScenarioState()">
+          Export JSON
+        </button>
+        <button type="button" class="button--ghost" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" class="button--ghost" (click)="exportViewportImage()">
+          Export PNG
+        </button>
+      </div>
+    </div>
+
+    <label class="dynamics-field dynamics-field--wide">
+      <span>Restore from exported JSON</span>
+      <textarea
+        class="dynamics-textarea"
+        [value]="importPayloadText()"
+        rows="8"
+        (input)="updateImportPayload($event)"
+      ></textarea>
+    </label>
+
+    <div class="dynamics-controls__row dynamics-controls__row--import">
+      <input accept="application/json" type="file" (change)="importScenarioStateFromFile($event)" />
+      <button type="button" class="button--ghost" (click)="importScenarioState()">
+        Import JSON
+      </button>
+    </div>
+
+    @if (exportMessage()) {
+      <p class="dynamics-panel__text dynamics-panel__text--compact">{{ exportMessage() }}</p>
+    }
+  </article>
+
+  <article class="dynamics-panel">
+    <h3>Implementation status</h3>
+    <ul class="dynamics-list">
+      <li>RK4 state integration is active in the Angular service layer.</li>
+      <li>Scenario sampling is generating {{ sampledStates().length }} deterministic states.</li>
+      <li>Live scrubber, playback, and parameter controls are now wired to the state core.</li>
+      <li>Collision reflections now reuse the same sampled-state and WebGPU viewport path.</li>
+      <li>
+        Scenario-specific viewport overlays now highlight anchors, orbital centers, and collision
+        limits.
+      </li>
+    </ul>
+  </article>
+
+  <section class="dynamics-graphs dynamics-panel" aria-label="Dynamics graphs">
+    <div class="dynamics-panel__header">
+      <div>
+        <p class="dynamics-panel__eyebrow">Sampled trajectories</p>
+        <h3>Time-series previews</h3>
+      </div>
+      <p class="dynamics-panel__text dynamics-panel__text--compact">
+        These previews come from the same sampled states that drive the viewport and readouts.
+      </p>
+    </div>
+
+    <div class="dynamics-graphs__grid">
+      <figure class="dynamics-graph">
+        <figcaption>x position vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path
+            [attr.d]="xPositionPath()"
+            class="dynamics-graph__line dynamics-graph__line--x"
+          ></path>
+        </svg>
+      </figure>
+
+      <figure class="dynamics-graph">
+        <figcaption>y position vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path
+            [attr.d]="yPositionPath()"
+            class="dynamics-graph__line dynamics-graph__line--y"
+          ></path>
+        </svg>
+      </figure>
+
+      <figure class="dynamics-graph">
+        <figcaption>speed vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path
+            [attr.d]="speedPath()"
+            class="dynamics-graph__line dynamics-graph__line--speed"
+          ></path>
+        </svg>
+      </figure>
+
+      <figure class="dynamics-graph">
+        <figcaption>total energy vs time</figcaption>
+        <svg viewBox="0 0 320 120" preserveAspectRatio="none">
+          <path
+            [attr.d]="totalEnergyPath()"
+            class="dynamics-graph__line dynamics-graph__line--energy"
+          ></path>
+        </svg>
+      </figure>
+    </div>
+  </section>
+</section>

@@ -1,0 +1,139 @@
+.quantum-page {
+  display: grid;
+  gap: 1.5rem;
+  color: #edf4ff;
+}
+
+.quantum-page__hero,
+.quantum-card {
+  background: linear-gradient(180deg, rgba(14, 24, 44, 0.94), rgba(8, 13, 26, 0.94));
+  border: 1px solid rgba(115, 156, 212, 0.24);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.28);
+}
+
+.quantum-page__eyebrow {
+  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  color: #8ed8ff;
+}
+
+.quantum-page__hero h2,
+.quantum-card h3,
+.quantum-card h4 {
+  margin: 0 0 0.6rem;
+}
+
+.quantum-page__summary,
+.quantum-card p,
+.quantum-card span,
+.quantum-card strong,
+.quantum-card label,
+.quantum-card pre {
+  line-height: 1.5;
+}
+
+.quantum-page__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.quantum-card--viewport,
+.quantum-card--workflow {
+  grid-column: span 2;
+}
+
+.quantum-card__note {
+  color: #b7c7de;
+}
+
+.quantum-scenario__header,
+.quantum-actions,
+.quantum-insights {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.quantum-insights {
+  align-items: stretch;
+  margin-bottom: 0.75rem;
+}
+
+.quantum-insight,
+.quantum-scenario {
+  background: rgba(15, 27, 51, 0.72);
+  border: 1px solid rgba(126, 169, 229, 0.18);
+  border-radius: 0.85rem;
+  padding: 0.95rem;
+  flex: 1 1 180px;
+}
+
+.quantum-viewport {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.quantum-viewport__canvas {
+  width: 100%;
+  min-height: 280px;
+  border-radius: 0.9rem;
+  background: radial-gradient(circle at top, rgba(23, 44, 80, 0.78), rgba(8, 12, 24, 1));
+  border: 1px solid rgba(108, 149, 215, 0.2);
+}
+
+.quantum-fields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.quantum-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.quantum-field input,
+.quantum-field select,
+.quantum-field textarea,
+.quantum-actions button,
+.quantum-upload {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(125, 169, 230, 0.24);
+  background: rgba(8, 14, 29, 0.9);
+  color: #edf4ff;
+  padding: 0.75rem 0.9rem;
+  font: inherit;
+}
+
+.quantum-actions button,
+.quantum-upload {
+  cursor: pointer;
+}
+
+.quantum-upload input {
+  display: none;
+}
+
+.quantum-card pre {
+  margin: 0;
+  overflow: auto;
+  max-height: 18rem;
+  background: rgba(4, 8, 18, 0.95);
+  border-radius: 0.85rem;
+  padding: 0.85rem;
+  border: 1px solid rgba(125, 169, 230, 0.18);
+  font-size: 0.86rem;
+}
+
+@media (max-width: 900px) {
+  .quantum-card--viewport,
+  .quantum-card--workflow {
+    grid-column: span 1;
+  }
+}

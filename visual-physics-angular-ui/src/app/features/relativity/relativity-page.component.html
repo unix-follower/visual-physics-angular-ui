@@ -1,0 +1,354 @@
+<section class="relativity-page">
+  <header class="relativity-page__hero">
+    <p class="relativity-page__eyebrow">Phase 23</p>
+    <h2>Relativity</h2>
+    <p>
+      Phase 23 now ships a complete Relativity surface covering time dilation, relativistic Doppler
+      shift, and gravitational time dilation through one shared Angular workflow.
+    </p>
+  </header>
+
+  <div class="relativity-page__grid">
+    <article class="relativity-page__panel">
+      <h3>Implementation Status</h3>
+      <p>
+        The Relativity Angular surface now covers the active Phase 23 scenario set through one
+        shared page, normalized state flow, sampled plot, report pipeline, export path, and WebGPU
+        renderer.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+      <p>
+        Completion status: <strong>{{ completionStatus() }}</strong
+        >.
+      </p>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Phase 23 Scenario Set</h3>
+      <label class="relativity-page__field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarios; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+      <div class="relativity-page__summary-grid">
+        <section class="relativity-page__summary-item">
+          <h4>{{ selectedScenario().name }}</h4>
+          <strong>{{ selectedScenario().status }}</strong>
+          <p>{{ selectedScenario().focusArea }}</p>
+          <p>{{ selectedScenario().equationSummary }}</p>
+        </section>
+      </div>
+      <p>
+        Current implementation includes validated `time-dilation`, `relativistic-doppler`, and
+        `gravitational-time-dilation` slices on one shared Angular page.
+      </p>
+    </article>
+
+    <article class="relativity-page__panel relativity-page__panel--wide">
+      <h3>Viewport</h3>
+      <p>{{ webGpuMessage() }}</p>
+      <canvas #viewport class="relativity-page__viewport" width="640" height="360"></canvas>
+      <p>{{ plotSummary() }}</p>
+    </article>
+
+    <article class="relativity-page__panel relativity-page__panel--wide">
+      <h3>Sampled Plot</h3>
+      <svg
+        class="relativity-page__plot"
+        viewBox="0 0 320 120"
+        [attr.aria-label]="plotTitle()"
+        role="img"
+        tabindex="0"
+        (focus)="focusPlotReadout()"
+        (blur)="clearHoveredSample()"
+        (keydown)="handlePlotKeydown($event)"
+        (mousemove)="updateHoveredSample($event)"
+        (mouseleave)="clearHoveredSample()"
+      >
+        @if (overlays().showReferenceGuides) {
+          @for (guide of samplePlotGuides(); track guide.label) {
+            <path class="relativity-page__plot-guide" [attr.d]="guide.path" />
+          }
+        }
+        @if (overlays().showComparisonCurve && sampleComparisonPath()) {
+          <path class="relativity-page__plot-comparison" [attr.d]="sampleComparisonPath()" />
+        }
+        @if (hoveredCursorPath()) {
+          <path class="relativity-page__plot-cursor" [attr.d]="hoveredCursorPath()" />
+        }
+        <path class="relativity-page__plot-primary" [attr.d]="samplePlotPath()" />
+        @if (overlays().showActiveMarker) {
+          @for (marker of sampleMarkers(); track marker.cx) {
+            <circle [attr.cx]="marker.cx" [attr.cy]="marker.cy" r="4" />
+          }
+        }
+      </svg>
+      @if (overlays().showReferenceGuides) {
+        <div class="relativity-page__plot-guides">
+          @for (guide of samplePlotGuides(); track guide.label) {
+            <p>
+              <strong>{{ guide.label }}:</strong> {{ guide.value }}
+            </p>
+          }
+        </div>
+      }
+      <p>{{ plotTitle() }}</p>
+      <div class="relativity-page__plot-readout">
+        <div class="relativity-page__sr-only" aria-live="polite">
+          {{ hoveredSampleAnnouncement() }}
+        </div>
+        <p>
+          <strong>{{ hoveredSampleLabel() }}</strong>
+        </p>
+        <div
+          class="relativity-page__actions"
+          aria-label="Relativity plot sample navigation controls"
+        >
+          <button
+            type="button"
+            (click)="selectFirstSample()"
+            [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+          >
+            First sample
+          </button>
+          <button
+            type="button"
+            (click)="stepHoveredSample(-1)"
+            [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+          >
+            Previous sample
+          </button>
+          <button
+            type="button"
+            (click)="stepHoveredSample(1)"
+            [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+          >
+            Next sample
+          </button>
+          <button
+            type="button"
+            (click)="selectLastSample()"
+            [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+          >
+            Last sample
+          </button>
+        </div>
+        @if (plotReadoutRows().length > 0) {
+          <div class="relativity-page__plot-readout-rows">
+            @for (row of plotReadoutRows(); track row.label) {
+              <span>{{ row.label }}: {{ row.value }}</span>
+            }
+          </div>
+        }
+      </div>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Controls</h3>
+      @if (isTimeDilation()) {
+        <label class="relativity-page__field">
+          <span>Velocity fraction of c</span>
+          <input
+            type="number"
+            min="-0.95"
+            max="0.95"
+            step="0.01"
+            [value]="selectedScenario().relativeVelocityFractionOfLight ?? 0"
+            (input)="updateScenarioParameter('relativeVelocityFractionOfLight', $event)"
+          />
+        </label>
+        <label class="relativity-page__field">
+          <span>Proper time</span>
+          <input
+            type="number"
+            min="0.01"
+            step="0.05"
+            [value]="selectedScenario().properTimeSeconds ?? 0"
+            (input)="updateScenarioParameter('properTimeSeconds', $event)"
+          />
+        </label>
+      }
+      @if (isDoppler()) {
+        <label class="relativity-page__field">
+          <span>Emitted frequency</span>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            [value]="selectedScenario().emittedFrequencyHertz ?? 0"
+            (input)="updateScenarioParameter('emittedFrequencyHertz', $event)"
+          />
+        </label>
+        <label class="relativity-page__field">
+          <span>Source velocity fraction of c</span>
+          <input
+            type="number"
+            min="-0.95"
+            max="0.95"
+            step="0.01"
+            [value]="selectedScenario().sourceVelocityFractionOfLight ?? 0"
+            (input)="updateScenarioParameter('sourceVelocityFractionOfLight', $event)"
+          />
+        </label>
+        <label class="relativity-page__field">
+          <span>Observer velocity fraction of c</span>
+          <input
+            type="number"
+            min="-0.95"
+            max="0.95"
+            step="0.01"
+            [value]="selectedScenario().observerVelocityFractionOfLight ?? 0"
+            (input)="updateScenarioParameter('observerVelocityFractionOfLight', $event)"
+          />
+        </label>
+      }
+      @if (isGravitational()) {
+        <label class="relativity-page__field">
+          <span>Central mass (solar masses)</span>
+          <input
+            type="number"
+            min="0.1"
+            step="0.1"
+            [value]="selectedScenario().centralMassSolarMasses ?? 0"
+            (input)="updateScenarioParameter('centralMassSolarMasses', $event)"
+          />
+        </label>
+        <label class="relativity-page__field">
+          <span>Radius (Schwarzschild radii)</span>
+          <input
+            type="number"
+            min="1.1"
+            step="0.1"
+            [value]="selectedScenario().orbitalRadiusSchwarzschildRadii ?? 0"
+            (input)="updateScenarioParameter('orbitalRadiusSchwarzschildRadii', $event)"
+          />
+        </label>
+        <label class="relativity-page__field">
+          <span>Coordinate time</span>
+          <input
+            type="number"
+            min="0.01"
+            step="0.05"
+            [value]="selectedScenario().coordinateTimeSeconds ?? 0"
+            (input)="updateScenarioParameter('coordinateTimeSeconds', $event)"
+          />
+        </label>
+      }
+
+      <div class="relativity-page__actions">
+        <button type="button" (click)="toggleOverlay('showReferenceGuides')">
+          {{ overlayLabels().showReferenceGuides }}
+          {{ overlays().showReferenceGuides ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showComparisonCurve')">
+          {{ overlayLabels().showComparisonCurve }}
+          {{ overlays().showComparisonCurve ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showActiveMarker')">
+          {{ overlayLabels().showActiveMarker }} {{ overlays().showActiveMarker ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="resetScenario()">Reset scenario</button>
+      </div>
+      <p>
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Scenario Summary</h3>
+      <div class="relativity-page__summary-grid">
+        @for (row of reportSummaryRows(); track row.metric) {
+          <section class="relativity-page__summary-item">
+            <h4>{{ row.label }}</h4>
+            <strong>{{ row.displayValue }}</strong>
+            <p>{{ row.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Readouts</h3>
+      <dl class="relativity-page__readouts">
+        @for (row of liveReadoutRows(); track row.label) {
+          <div>
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+          </div>
+        }
+      </dl>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Status</h3>
+      <p>
+        <strong>{{ selectedScenario().status }}</strong>
+      </p>
+      <p>{{ selectedScenario().focusArea }}</p>
+      <p>
+        This slice now shares one normalized state, plot, report, export, and WebGPU viewport path
+        across all current Relativity studies.
+      </p>
+    </article>
+
+    <article class="relativity-page__panel">
+      <h3>Insight Cards</h3>
+      <div class="relativity-page__insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="relativity-page__insight">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+      <p>{{ insightSummary() }}</p>
+    </article>
+
+    <article class="relativity-page__panel relativity-page__panel--wide">
+      <h3>Export and Restore</h3>
+      <div class="relativity-page__actions">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="downloadReportCsv()">Download CSV</button>
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+        <button type="button" (click)="resetScenario()">Reset</button>
+      </div>
+      <label class="relativity-page__field">
+        <span>Import payload</span>
+        <textarea
+          rows="10"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <label class="relativity-page__field">
+        <span>Import from file</span>
+        <input
+          type="file"
+          accept="application/json"
+          (change)="importScenarioStateFromFile($event)"
+        />
+      </label>
+      @if (exportMessage()) {
+        <p>{{ exportMessage() }}</p>
+      }
+      <div class="relativity-page__preview-grid">
+        <div>
+          <h4>JSON Preview</h4>
+          <pre>{{ exportPreview() }}</pre>
+        </div>
+        <div>
+          <h4>CSV Preview</h4>
+          <pre>{{ reportPreview() }}</pre>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>

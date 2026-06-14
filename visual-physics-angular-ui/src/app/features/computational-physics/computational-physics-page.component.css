@@ -1,0 +1,172 @@
+.computational-physics-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.computational-physics-page__hero {
+  background: linear-gradient(135deg, #f3e8d4, #f8f5ef);
+  border: 1px solid #d8c6a6;
+  border-radius: 1rem;
+  padding: 1.5rem;
+}
+
+.computational-physics-page__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8a5a1f;
+}
+
+.computational-physics-page__summary,
+.computational-physics-page__message {
+  margin: 0;
+  color: #4b5563;
+}
+
+.computational-physics-page__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.computational-physics-card {
+  background: #fffdfa;
+  border: 1px solid #eadfce;
+  border-radius: 1rem;
+  padding: 1rem;
+  box-shadow: 0 14px 28px rgba(120, 92, 45, 0.08);
+}
+
+.computational-physics-card h3,
+.computational-physics-card h4,
+.computational-physics-card p,
+.computational-physics-card pre {
+  margin-top: 0;
+}
+
+.computational-physics-scenario__header,
+.computational-physics-actions,
+.computational-physics-field,
+.computational-physics-viewport-shell,
+.computational-physics-insight {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.computational-physics-scenario__header {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.computational-physics-fields,
+.computational-physics-results,
+.computational-physics-insights,
+.computational-physics-plots,
+.computational-physics-plot-shell,
+.computational-physics-plot-legend {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.computational-physics-plots {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.computational-physics-plot {
+  width: 100%;
+  height: auto;
+  border: 1px solid #d8c6a6;
+  border-radius: 0.75rem;
+  background: #f8f5ef;
+}
+
+.computational-physics-plot__axis {
+  stroke: #8a7d6b;
+  stroke-width: 1;
+}
+
+.computational-physics-plot__path {
+  fill: none;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.computational-physics-plot__label {
+  fill: #5b4632;
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.computational-physics-plot-legend p {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.computational-physics-plot-legend__swatch {
+  width: 0.85rem;
+  height: 0.85rem;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.computational-physics-field input,
+.computational-physics-card textarea {
+  width: 100%;
+  border: 1px solid #d8c6a6;
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.computational-physics-viewport-canvas {
+  width: 100%;
+  height: auto;
+  border: 1px solid #d8c6a6;
+  border-radius: 0.75rem;
+  background: #f5f0e8;
+}
+
+.computational-physics-actions {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.computational-physics-actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.7rem 0.9rem;
+  background: #1f2937;
+  color: #fffdfa;
+  font: inherit;
+  cursor: pointer;
+}
+
+.computational-physics-actions__button--active {
+  background: #0f766e;
+}
+
+.computational-physics-insight {
+  background: #f8f5ef;
+  border-radius: 0.8rem;
+  padding: 0.85rem;
+}
+
+.computational-physics-card pre {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 0.85rem;
+  border-radius: 0.75rem;
+  overflow: auto;
+}
+
+@media (max-width: 720px) {
+  .computational-physics-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

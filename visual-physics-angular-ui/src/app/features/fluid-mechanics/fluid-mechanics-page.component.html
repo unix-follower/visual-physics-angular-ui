@@ -1,0 +1,287 @@
+<section class="fluid-page">
+  <div class="fluid-page__hero">
+    <p class="fluid-page__eyebrow">Phase 13</p>
+    <h2>Fluid Mechanics with Angular and WebGPU</h2>
+    <p class="fluid-page__summary">
+      Phase 13 now includes buoyancy equilibrium, laminar pipe flow, and uniform open-channel flow,
+      extending the shared Fluid Mechanics route, payload flow, diagnostics, CSV export, and WebGPU
+      viewport path.
+    </p>
+  </div>
+
+  <div class="fluid-page__grid">
+    <article class="fluid-card fluid-card--status">
+      <h3>Implementation Status</h3>
+      <p>
+        The Angular Fluid Mechanics surface now covers buoyancy equilibrium, laminar Poiseuille pipe
+        flow, and uniform open-channel diagnostics, using the same page, payload, export, and
+        renderer architecture already validated in other domains.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >.
+        {{ focusSummary() }}
+      </p>
+      <p>Completion status: <strong>Phase 13 platform in progress</strong>.</p>
+      <label class="fluid-field">
+        <span>Scenario</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarioPreviews; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="fluid-card fluid-card--scenario">
+      <h3>Phase 13 Scenario Set</h3>
+      @for (scenario of scenarioPreviews; track scenario.id) {
+        <section class="fluid-scenario">
+          <div class="fluid-scenario__header">
+            <h4>{{ scenario.name }}</h4>
+            <span>{{ scenario.status }}</span>
+          </div>
+          <p>{{ scenario.focusArea }}</p>
+          <p>{{ scenario.equationSummary }}</p>
+        </section>
+      }
+      <p class="fluid-card__note">
+        Current plan: buoyancy equilibrium, laminar pipe flow, and uniform open-channel flow are
+        implemented as the current Angular Fluid Mechanics vertical slices.
+      </p>
+    </article>
+
+    <article class="fluid-card fluid-card--viewport">
+      <h3>Fluid Mechanics Viewport</h3>
+      <div class="fluid-viewport">
+        <canvas #viewport class="fluid-viewport__canvas"></canvas>
+        <p>{{ viewportHint() }}</p>
+        <p>{{ webGpuMessage() }}</p>
+      </div>
+      <div class="fluid-actions" aria-label="Fluid mechanics overlay toggles">
+        <button type="button" (click)="toggleOverlay('showForceGuides')">
+          {{ overlayLabels().showForceGuides }} {{ overlays().showForceGuides ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showWaterline')">
+          {{ overlayLabels().showWaterline }} {{ overlays().showWaterline ? "on" : "off" }}
+        </button>
+        <button type="button" (click)="toggleOverlay('showEquilibriumGuide')">
+          {{ overlayLabels().showEquilibriumGuide }}
+          {{ overlays().showEquilibriumGuide ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="fluid-card fluid-card--controls">
+      <h3>{{ controlTitle() }}</h3>
+      <div class="fluid-fields">
+        @if (isBuoyancyScenario()) {
+          <label class="fluid-field">
+            <span>Fluid density (kg/m^3)</span>
+            <input
+              type="number"
+              step="10"
+              [value]="metrics().fluidDensity"
+              (input)="updateScenarioParameter('fluidDensity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Block density (kg/m^3)</span>
+            <input
+              type="number"
+              step="10"
+              [value]="metrics().blockDensity"
+              (input)="updateScenarioParameter('blockDensity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Gravity (m/s^2)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().gravity"
+              (input)="updateScenarioParameter('gravity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Block width (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().blockWidth"
+              (input)="updateScenarioParameter('blockWidth', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Block height (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().blockHeight"
+              (input)="updateScenarioParameter('blockHeight', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Block depth (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().blockDepth"
+              (input)="updateScenarioParameter('blockDepth', $event)"
+            />
+          </label>
+        }
+        @if (isPipeScenario()) {
+          <label class="fluid-field">
+            <span>Fluid density (kg/m^3)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().fluidDensity"
+              (input)="updateScenarioParameter('fluidDensity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Dynamic viscosity (Pa*s)</span>
+            <input
+              type="number"
+              step="0.0001"
+              [value]="metrics().dynamicViscosity"
+              (input)="updateScenarioParameter('dynamicViscosity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Pipe radius (m)</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().pipeRadius"
+              (input)="updateScenarioParameter('pipeRadius', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Pipe length (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().pipeLength"
+              (input)="updateScenarioParameter('pipeLength', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Pressure drop (Pa)</span>
+            <input
+              type="number"
+              step="1"
+              [value]="metrics().pressureDrop"
+              (input)="updateScenarioParameter('pressureDrop', $event)"
+            />
+          </label>
+        }
+        @if (isChannelScenario()) {
+          <label class="fluid-field">
+            <span>Gravity (m/s^2)</span>
+            <input
+              type="number"
+              step="0.01"
+              [value]="metrics().gravity"
+              (input)="updateScenarioParameter('gravity', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Channel width (m)</span>
+            <input
+              type="number"
+              step="0.1"
+              [value]="metrics().channelWidth"
+              (input)="updateScenarioParameter('channelWidth', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Flow depth (m)</span>
+            <input
+              type="number"
+              step="0.05"
+              [value]="metrics().channelDepth"
+              (input)="updateScenarioParameter('channelDepth', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Bed slope</span>
+            <input
+              type="number"
+              step="0.0001"
+              [value]="metrics().channelSlope"
+              (input)="updateScenarioParameter('channelSlope', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Roughness coefficient</span>
+            <input
+              type="number"
+              step="0.001"
+              [value]="metrics().roughnessCoefficient"
+              (input)="updateScenarioParameter('roughnessCoefficient', $event)"
+            />
+          </label>
+          <label class="fluid-field">
+            <span>Channel length (m)</span>
+            <input
+              type="number"
+              step="0.5"
+              [value]="metrics().channelLength"
+              (input)="updateScenarioParameter('channelLength', $event)"
+            />
+          </label>
+        }
+      </div>
+      <p class="fluid-card__note">
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </article>
+
+    <article class="fluid-card fluid-card--insights">
+      <h3>Insight Cards</h3>
+      <div class="fluid-insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="fluid-insight">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+      <p>{{ residualSummary() }}</p>
+    </article>
+
+    <article class="fluid-card fluid-card--workflow">
+      <h3>Export and Restore</h3>
+      <div class="fluid-actions">
+        <button type="button" (click)="copyScenarioState()">Copy JSON</button>
+        <button type="button" (click)="downloadScenarioState()">Download JSON</button>
+        <button type="button" (click)="downloadReportCsv()">Download CSV</button>
+      </div>
+      <label class="fluid-field">
+        <span>Import JSON</span>
+        <textarea
+          rows="10"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <div class="fluid-actions">
+        <button type="button" (click)="importScenarioState()">Import JSON</button>
+        <label class="fluid-upload">
+          <span>Load file</span>
+          <input
+            type="file"
+            accept="application/json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+      </div>
+      <p>{{ exportMessage() }}</p>
+      <pre>{{ exportPreview() }}</pre>
+    </article>
+  </div>
+</section>

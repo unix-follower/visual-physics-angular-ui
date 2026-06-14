@@ -1,0 +1,437 @@
+<section class="waves-page">
+  <header class="waves-page__hero">
+    <p class="waves-page__eyebrow">Phase 21</p>
+    <h2>Waves and Acoustics</h2>
+    <p>
+      Phase 21 now ships a complete shared Waves and Acoustics surface covering standing-wave,
+      traveling-wave, and Doppler studies with synchronized chart, report, export, and WebGPU
+      viewport workflows.
+    </p>
+  </header>
+
+  <section class="waves-page__grid">
+    <article class="waves-page__card">
+      <h3>Implementation Status</h3>
+      <p>
+        The Waves and Acoustics Angular surface now covers the active Phase 21 scenario set through
+        one shared page, state service, payload flow, report pipeline, sampled chart, and WebGPU
+        renderer path.
+      </p>
+      <p>
+        Current focus: <strong>{{ selectedScenario().name }}</strong
+        >. {{ focusSummary() }}
+      </p>
+      <p>Completion status: <strong>Phase 21 waves scenario set complete</strong>.</p>
+      <label class="waves-page__field">
+        <span>Active study</span>
+        <select [value]="selectedScenario().id" (change)="selectScenario($event)">
+          @for (scenario of scenarios; track scenario.id) {
+            <option [value]="scenario.id">{{ scenario.name }}</option>
+          }
+        </select>
+      </label>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Phase 21 Scenario Set</h3>
+      <div class="waves-page__summary-list">
+        <section class="waves-page__summary-item">
+          <h4>{{ selectedScenario().name }}</h4>
+          <strong>{{ selectedScenario().status }}</strong>
+          <p>{{ selectedScenario().focusArea }}</p>
+          <p class="waves-page__equation">{{ selectedScenario().equationSummary }}</p>
+        </section>
+      </div>
+      <p>
+        Current implementation includes validated `standing-wave`, `traveling-wave`, and
+        `doppler-effect` slices on one shared Angular page.
+      </p>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Controls</h3>
+      @if (isStandingWave()) {
+        <label class="waves-page__field">
+          <span>String length (m)</span>
+          <input
+            type="number"
+            step="0.1"
+            [value]="standingWaveMetrics().stringLengthMeters"
+            (input)="updateScenarioParameter('stringLengthMeters', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Wave speed (m/s)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="standingWaveMetrics().waveSpeedMetersPerSecond"
+            (input)="updateScenarioParameter('waveSpeedMetersPerSecond', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Amplitude (mm)</span>
+          <input
+            type="number"
+            step="0.5"
+            [value]="standingWaveMetrics().amplitudeMillimeters"
+            (input)="updateScenarioParameter('amplitudeMillimeters', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Harmonic number</span>
+          <input
+            type="number"
+            step="1"
+            [value]="standingWaveMetrics().harmonicNumber"
+            (input)="updateScenarioParameter('harmonicNumber', $event)"
+          />
+        </label>
+      } @else if (isTravelingWave()) {
+        <label class="waves-page__field">
+          <span>Wave speed (m/s)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="travelWaveMetrics().waveSpeedMetersPerSecond"
+            (input)="updateScenarioParameter('waveSpeedMetersPerSecond', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Amplitude (mm)</span>
+          <input
+            type="number"
+            step="0.5"
+            [value]="travelWaveMetrics().amplitudeMillimeters"
+            (input)="updateScenarioParameter('amplitudeMillimeters', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Frequency (Hz)</span>
+          <input
+            type="number"
+            step="0.5"
+            [value]="travelWaveMetrics().frequencyHertz"
+            (input)="updateScenarioParameter('frequencyHertz', $event)"
+          />
+        </label>
+      } @else {
+        <label class="waves-page__field">
+          <span>Emitted frequency (Hz)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="dopplerMetrics().emittedFrequencyHertz"
+            (input)="updateScenarioParameter('emittedFrequencyHertz', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Medium speed (m/s)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="dopplerMetrics().waveSpeedMetersPerSecond"
+            (input)="updateScenarioParameter('waveSpeedMetersPerSecond', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Source speed (m/s)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="dopplerMetrics().sourceSpeedMetersPerSecond"
+            (input)="updateScenarioParameter('sourceSpeedMetersPerSecond', $event)"
+          />
+        </label>
+        <label class="waves-page__field">
+          <span>Observer speed (m/s)</span>
+          <input
+            type="number"
+            step="1"
+            [value]="dopplerMetrics().observerSpeedMetersPerSecond"
+            (input)="updateScenarioParameter('observerSpeedMetersPerSecond', $event)"
+          />
+        </label>
+      }
+      <label class="waves-page__field">
+        <span>Snapshot time (s)</span>
+        <input
+          type="number"
+          step="0.05"
+          min="0"
+          [value]="currentState().timeSeconds"
+          (input)="updateScenarioParameter('timeSeconds', $event)"
+        />
+      </label>
+      <button type="button" class="waves-page__button" (click)="resetScenario()">
+        Reset scenario
+      </button>
+      <p>
+        <strong>{{ controlNote() }}</strong>
+      </p>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Readouts</h3>
+      <dl class="waves-page__readouts">
+        @if (currentState().stringLengthMeters !== undefined) {
+          <div>
+            <dt>Length</dt>
+            <dd>{{ currentState().stringLengthMeters?.toFixed(3) }} m</dd>
+          </div>
+        }
+        @if (currentState().wavelengthMeters !== undefined) {
+          <div>
+            <dt>Wavelength</dt>
+            <dd>{{ currentState().wavelengthMeters?.toFixed(3) }} m</dd>
+          </div>
+        }
+        @if (currentState().frequencyHertz !== undefined) {
+          <div>
+            <dt>Frequency</dt>
+            <dd>{{ currentState().frequencyHertz?.toFixed(2) }} Hz</dd>
+          </div>
+        }
+        @if (currentState().apparentFrequencyHertz !== undefined) {
+          <div>
+            <dt>Apparent frequency</dt>
+            <dd>{{ currentState().apparentFrequencyHertz?.toFixed(2) }} Hz</dd>
+          </div>
+        }
+        <div>
+          <dt>Snapshot time</dt>
+          <dd>{{ currentState().timeSeconds.toFixed(2) }} s</dd>
+        </div>
+        <div>
+          <dt>Samples</dt>
+          <dd>{{ sampledStates().length }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Status</h3>
+      <p>
+        <strong>{{ selectedScenario().status }}</strong>
+      </p>
+      <p>{{ selectedScenario().focusArea }}</p>
+      <p>
+        This slice now includes a deterministic viewport path that shares the same scenario state,
+        payload, and report contracts as the rest of the feature.
+      </p>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Scenario Summary</h3>
+      <div class="waves-page__summary-list">
+        @for (row of reportSummaryRows(); track row.metric) {
+          <section class="waves-page__summary-item">
+            <h4>{{ row.label }}</h4>
+            <strong>{{ row.value }}</strong>
+            <p>{{ row.detail }}</p>
+          </section>
+        }
+      </div>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>Insight Cards</h3>
+      <div class="waves-page__insights">
+        @for (card of insightCards(); track card.label) {
+          <section class="waves-page__insight">
+            <h4>{{ card.label }}</h4>
+            <strong>{{ card.value }}</strong>
+            <p>{{ card.detail }}</p>
+          </section>
+        }
+      </div>
+      <p>{{ residualSummary() }}</p>
+    </article>
+
+    <article class="waves-page__card">
+      <h3>{{ samplePlotTitle() }}</h3>
+      <div class="waves-page__plot">
+        <svg
+          viewBox="0 0 320 120"
+          [attr.aria-label]="samplePlotTitle()"
+          tabindex="0"
+          (focus)="focusPlotReadout()"
+          (blur)="clearHoveredSample()"
+          (keydown)="handlePlotKeydown($event)"
+          (mousemove)="updateHoveredSample($event)"
+          (mouseleave)="clearHoveredSample()"
+        >
+          @if (showPlotGuides()) {
+            @for (guide of samplePlotGuides(); track guide.label) {
+              <path [attr.d]="guide.path" class="waves-page__plot-guide" />
+            }
+          }
+          @if (showPlotReferenceCurve() && sampleReferencePath()) {
+            <path [attr.d]="sampleReferencePath()" class="waves-page__plot-reference" />
+          }
+          @if (showPlotMarkers()) {
+            @for (marker of samplePlotMarkers(); track marker.cx) {
+              <circle
+                [attr.cx]="marker.cx"
+                [attr.cy]="marker.cy"
+                r="2.2"
+                class="waves-page__plot-marker"
+              />
+            }
+          }
+          @if (hoveredCursorPath()) {
+            <path [attr.d]="hoveredCursorPath()" class="waves-page__plot-cursor" />
+          }
+          <path [attr.d]="samplePlotPath()" class="waves-page__plot-path" />
+        </svg>
+        @if (showPlotGuides()) {
+          <div class="waves-page__plot-guides">
+            @for (guide of samplePlotGuides(); track guide.label) {
+              <p>
+                <strong>{{ guide.label }}:</strong> {{ guide.value }}
+              </p>
+            }
+          </div>
+        }
+        <div class="waves-page__plot-readout">
+          <div class="waves-page__sr-only" aria-live="polite">
+            {{ hoveredSampleAnnouncement() }}
+          </div>
+          <p>
+            <strong>{{ hoveredSampleLabel() }}</strong>
+          </p>
+          <div class="waves-page__plot-controls" aria-label="Waves plot sample navigation controls">
+            <button
+              type="button"
+              class="waves-page__button waves-page__button--secondary"
+              (click)="selectFirstSample()"
+              [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+            >
+              First sample
+            </button>
+            <button
+              type="button"
+              class="waves-page__button waves-page__button--secondary"
+              (click)="stepHoveredSample(-1)"
+              [disabled]="plotNavigationDisabled() || atFirstHoveredSample()"
+            >
+              Previous sample
+            </button>
+            <button
+              type="button"
+              class="waves-page__button waves-page__button--secondary"
+              (click)="stepHoveredSample(1)"
+              [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+            >
+              Next sample
+            </button>
+            <button
+              type="button"
+              class="waves-page__button waves-page__button--secondary"
+              (click)="selectLastSample()"
+              [disabled]="plotNavigationDisabled() || atLastHoveredSample()"
+            >
+              Last sample
+            </button>
+          </div>
+          @if (plotReadoutRows().length > 0) {
+            <div class="waves-page__plot-readout-rows">
+              @for (row of plotReadoutRows(); track row.label) {
+                <span>{{ row.label }}: {{ row.value }}</span>
+              }
+            </div>
+          }
+        </div>
+        <p>{{ samplePlotSummary() }}</p>
+      </div>
+    </article>
+
+    <article class="waves-page__card waves-page__card--viewport">
+      <h3>Viewport</h3>
+      <div class="waves-page__viewport">
+        <canvas #viewport class="waves-page__canvas"></canvas>
+        <p>{{ viewportHint() }}</p>
+        <p>{{ webGpuMessage() }}</p>
+      </div>
+      <div class="waves-page__actions" aria-label="Waves overlay toggles">
+        <button
+          type="button"
+          class="waves-page__button waves-page__button--secondary"
+          (click)="toggleOverlay('showWaveGuides')"
+        >
+          {{ overlayLabels().showWaveGuides }} {{ overlays().showWaveGuides ? "on" : "off" }}
+        </button>
+        <button
+          type="button"
+          class="waves-page__button waves-page__button--secondary"
+          (click)="toggleOverlay('showNodeMarkers')"
+        >
+          {{ overlayLabels().showNodeMarkers }} {{ overlays().showNodeMarkers ? "on" : "off" }}
+        </button>
+        <button
+          type="button"
+          class="waves-page__button waves-page__button--secondary"
+          (click)="toggleOverlay('showReferenceCurve')"
+        >
+          {{ overlayLabels().showReferenceCurve }}
+          {{ overlays().showReferenceCurve ? "on" : "off" }}
+        </button>
+      </div>
+    </article>
+
+    <article class="waves-page__card waves-page__card--preview">
+      <h3>Export Preview</h3>
+      <p>
+        The current feature slice now drives both JSON payload and summary-first CSV output from the
+        same selected scenario state.
+      </p>
+      <div class="waves-page__actions">
+        <button type="button" class="waves-page__button" (click)="copyScenarioState()">
+          Copy JSON
+        </button>
+        <button type="button" class="waves-page__button" (click)="downloadScenarioState()">
+          Download JSON
+        </button>
+        <button type="button" class="waves-page__button" (click)="downloadReportCsv()">
+          Download CSV
+        </button>
+      </div>
+      <label class="waves-page__field">
+        <span>Import JSON</span>
+        <textarea
+          rows="8"
+          [value]="importPayloadText()"
+          (input)="updateImportPayload($event)"
+        ></textarea>
+      </label>
+      <div class="waves-page__actions">
+        <button
+          type="button"
+          class="waves-page__button waves-page__button--secondary"
+          (click)="importScenarioState()"
+        >
+          Import JSON
+        </button>
+        <label class="waves-page__upload">
+          <span>Load file</span>
+          <input
+            type="file"
+            accept="application/json"
+            (change)="importScenarioStateFromFile($event)"
+          />
+        </label>
+      </div>
+      <p>{{ exportMessage() }}</p>
+      <div class="waves-page__preview-grid">
+        <section>
+          <h4>JSON</h4>
+          <pre>{{ exportPreview() }}</pre>
+        </section>
+        <section>
+          <h4>CSV</h4>
+          <pre>{{ reportPreview() }}</pre>
+        </section>
+      </div>
+    </article>
+  </section>
+</section>
