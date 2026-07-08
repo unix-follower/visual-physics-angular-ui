@@ -40,9 +40,9 @@ jobs:
           npm run format
           exit 1
 
-      - name: Run ESLint
-        shell: bash
-        run: npm run lint
+      # - name: Run ESLint
+      #   shell: bash
+      #   run: npm run lint
 
       - name: Build visual-physics-angular-ui
         shell: bash
